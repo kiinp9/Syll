@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+	  <Folder Include="Auth\Dtos\Role\" />
+	  <Folder Include="Auth\Dtos\Permission\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\syll.be.infrastructure.data\syll.be.infrastructure.data.csproj" />
+		<ProjectReference Include="..\syll.be.infrastructure.external\syll.be.infrastructure.external.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="AutoMapper" Version="15.1.0" />
+	  <PackageReference Include="ClosedXML" Version="0.105.0" />
+	  <PackageReference Include="EFCore.BulkExtensions" Version="9.0.2" />
+	  <PackageReference Include="Google.Apis.Drive.v3" Version="1.72.0.3938" />
+	  <PackageReference Include="Google.Apis.Sheets.v4" Version="1.70.0.3819" />
+	  <PackageReference Include="Hangfire.Core" Version="1.8.21" />
+	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+	  <PackageReference Include="Microsoft.Graph" Version="5.95.0" />
+	  <PackageReference Include="NLog" Version="6.0.5" />
+	  <PackageReference Include="NLog.Extensions.Logging" Version="6.0.5" />
+	  <PackageReference Include="Volo.Abp.Security" Version="9.3.6" />
+	</ItemGroup>
+
+</Project>

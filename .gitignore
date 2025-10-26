@@ -1,0 +1,59 @@
+## Build Folders
+bin/
+obj/
+out/
+Debug/
+Release/
+
+## VS User Files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VSCode
+.vscode/
+.history/
+*.code-workspace
+
+## Rider
+.idea/
+
+## Logs & Temp
+*.log
+*.tlog
+*.vspscc
+*.cache
+*.dbmdl
+*.jfm
+*.pdb
+*.tmp
+
+## NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## EF Core
+Migrations/  # ⚠️ Optional – remove this line if you want migrations tracked
+## Service Account
+thongbao.be/service-account.json
+
+##Oauth Secret
+thongbao.be/oauth-secret.json
+
+## Others
+wwwroot/lib/
+node_modules/
+*.DS_Store
+Thumbs.db
+
+## Visual Studio Generated
+.vs/
+
