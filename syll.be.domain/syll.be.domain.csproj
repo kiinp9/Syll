@@ -12,5 +12,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\syll.be.shared\syll.be.shared.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="DataSync\" />
+	</ItemGroup>
 
 </Project>

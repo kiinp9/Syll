@@ -19,6 +19,7 @@ namespace syll.be.application.Base
         public readonly SyllDbContext _syllDbContext;
         public readonly ILogger<BaseService> _logger;
         public readonly IHttpContextAccessor _httpContextAccessor;
+        private static readonly TimeZoneInfo VietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
         protected readonly IMapper _mapper;
         public BaseService(
             SyllDbContext syllDbContext,
@@ -52,6 +53,10 @@ namespace syll.be.application.Base
             var roles = _httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).ToList();
             var isSuperAdmin = roles?.Any(r => r.Value == RoleConstants.ROLE_SUPER_ADMIN) ?? false;
             return isSuperAdmin;
+        }
+        protected static DateTime GetVietnamTime()
+        {
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, VietnamTimeZone);
         }
     }
 }

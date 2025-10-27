@@ -23,6 +23,18 @@ namespace syll.be.shared.Constants.Auth
         public const string UserView = Function + "UserView";
         public const string UserSetRoles = Function + "UserSetRoles";
 
+        public const string CategoryToChuc = "QL Tổ chức";
+        public const string ToChucAdd = Function + "ToChucAdd";
+        public const string ToChucUpdate = Function + "ToChucUpdate";
+        public const string ToChucDelete = Function + "ToChucDelete";
+        public const string ToChucView = Function + "ToChucView";
+
+        public const string CategoryDanhBa = "QL Danh bạ";
+        public const string DanhBaAdd = Function + "DanhBaAdd";
+        public const string DanhBaUpdate = Function + "DanhBaUpdate";
+        public const string DanhBaDelete = Function + "DanhBaDelete";
+        public const string DanhBaView = Function + "DanhBaView";
+        public const string DanhBaImport = Function + "DanhBaImport";
 
         public static readonly (string Key, string Name, string Category)[] All =
         {
@@ -35,6 +47,17 @@ namespace syll.be.shared.Constants.Auth
             (UserDelete, "Xoá User" , CategoryUser),
             (UserView, "Xem User" , CategoryUser),
             (UserSetRoles, "Gán role cho User" , CategoryUser),
+
+            (ToChucAdd, "Thêm Tổ chức ", CategoryToChuc),
+            (ToChucUpdate, "Cập nhật Tổ chức", CategoryToChuc),
+            (ToChucDelete, "Xoá Tổ chức", CategoryToChuc),
+            (ToChucView, "Xem Tổ chức", CategoryToChuc),
+
+            (DanhBaAdd, "Thêm Danh bạ ", CategoryDanhBa),
+            (DanhBaUpdate, "Cập nhật Danh bạ", CategoryDanhBa),
+            (DanhBaDelete, "Xoá Danh bạ", CategoryDanhBa),
+            (DanhBaView, "Xem Danh bạ", CategoryDanhBa),
+            (DanhBaImport,"Import Danh Bạ",DanhBaImport),
 
         };
     }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using syll.be.infrastructure.data;
 
@@ -11,9 +12,11 @@ using syll.be.infrastructure.data;
 namespace syll.be.infrastructure.data.Migrations
 {
     [DbContext(typeof(SyllDbContext))]
-    partial class SyllDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251027074728_Form_DanhBa_ToChuc__Design")]
+    partial class Form_DanhBa_ToChuc__Design
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -649,9 +652,6 @@ namespace syll.be.infrastructure.data.Migrations
 
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("LoaiToChuc")
-                        .HasColumnType("int");
 
                     b.Property<string>("MaSoToChuc")
                         .HasColumnType("nvarchar(max)");

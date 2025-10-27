@@ -11,6 +11,10 @@ using OpenIddict.Abstractions;
 using syll.be.application.Auth.Implements;
 using syll.be.application.Auth.Interfaces;
 using syll.be.application.Base;
+using syll.be.application.DanhBa.Implements;
+using syll.be.application.DanhBa.Interfaces;
+using syll.be.application.ToChuc.Implements;
+using syll.be.application.ToChuc.Interfaces;
 using syll.be.domain.Auth;
 using syll.be.infrastructure.data;
 using syll.be.infrastructure.data.Seeder;
@@ -216,6 +220,8 @@ builder.Services.ConfigureHangfire(hangfireConnectionString);
 // Add services to the container.
 #region service
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<IToChucService, ToChucService>();
+builder.Services.AddScoped<IDanhBaService, DanhBaService>();
 
 #endregion
 

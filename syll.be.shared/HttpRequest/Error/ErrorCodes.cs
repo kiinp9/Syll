@@ -22,5 +22,8 @@ namespace syll.be.shared.HttpRequest.Error
         public const int AuthErrorCreateRole = 104;
         public const int AuthErrorRoleNotFound = 105;
         public const int AuthErrorUserEmailHuceNotFound = 106;
+
+        public const int ToChucErrorNotFound = 201;
+        public const int ToChucErrorLoaiToChucNotFound = 202;
     }
 }

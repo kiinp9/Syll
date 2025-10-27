@@ -21,6 +21,8 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.AuthErrorCreateUser, "Lỗi tạo user" },
             { ErrorCodes.AuthErrorCreateRole, "Lỗi tạo role" },
             { ErrorCodes.Found, "Đã tồn tại trong hệ thống" },
+            { ErrorCodes.ToChucErrorNotFound, "Tổ chức không tồn tại" },
+            { ErrorCodes.ToChucErrorLoaiToChucNotFound,"Loại tổ chức không tồn tại" },
         };
 
         public static string GetMessage(int code)
