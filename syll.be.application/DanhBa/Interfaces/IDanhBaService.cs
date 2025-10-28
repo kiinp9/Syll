@@ -12,5 +12,6 @@ namespace syll.be.application.DanhBa.Interfaces
     {
         public BaseResponsePagingDto<ViewDanhBaDto> FindDanhBa(FindPagingDanhBaDto dto);
         public  Task<ImportDanhBaResponseDto> ImportDanhBa(ImportDanhBaDto dto);
+        public  Task Create(CreateDanhBaDto dto);
     }
 }

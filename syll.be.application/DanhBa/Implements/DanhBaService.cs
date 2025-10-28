@@ -46,6 +46,61 @@ namespace syll.be.application.DanhBa.Implements
             _configuration = configuration;
             //_memoryCache = memoryCache;
         }
+        public async Task Create (CreateDanhBaDto dto)
+        {
+            _logger.LogInformation($"{nameof(Create)} dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var vietnamTime = GetVietnamTime();
+        
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var parts = dto.HoVaTen.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
+                var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
+
+                var danhBa = new domain.DanhBa.DanhBa
+                {
+                    HoVaTen = dto.HoVaTen,
+                    HoDem = hoDem,
+                    Ten = ten,
+                    Email = dto.Email,
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+
+                _syllDbContext.DanhBas.Add(danhBa);
+                await _syllDbContext.SaveChangesAsync();
+
+                var danhBaId = danhBa.Id;
+
+                var toChuc = await _syllDbContext.ToChucs
+                    .FirstOrDefaultAsync(tc => tc.Id == dto.IdToChuc && !tc.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+
+                var toChucDanhBa = new domain.ToChuc.ToChucDanhBa
+                {
+                    IdToChuc = toChuc.Id,
+                    IdDanhBa = danhBaId,
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+
+                _syllDbContext.ToChucDanhBa.Add(toChucDanhBa);
+                await _syllDbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+        }
         public BaseResponsePagingDto<ViewDanhBaDto> FindDanhBa(FindPagingDanhBaDto dto)
         {
             _logger.LogInformation($"{nameof(FindDanhBa)} dto={JsonSerializer.Serialize(dto)}");
@@ -121,9 +176,9 @@ namespace syll.be.application.DanhBa.Implements
                     continue;
                 }
 
-                var hoTen = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0 ? row[dto.IndexColumnHoTen - 1]?.Trim() : string.Empty;
-                var email = dto.IndexColumnEmail - 1 < row.Count && dto.IndexColumnEmail > 0 ? row[dto.IndexColumnEmail - 1]?.Trim() : string.Empty;
-                var maSoToChuc = dto.IndexColumnMaSoToChuc - 1 < row.Count && dto.IndexColumnMaSoToChuc > 0 ? row[dto.IndexColumnMaSoToChuc - 1]?.Trim() : string.Empty;
+                var hoTen = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0 ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty : string.Empty;
+                var email = dto.IndexColumnEmail - 1 < row.Count && dto.IndexColumnEmail > 0 ? row[dto.IndexColumnEmail - 1]?.ToString() ?? string.Empty : string.Empty;
+                var maSoToChuc = dto.IndexColumnMaSoToChuc - 1 < row.Count && dto.IndexColumnMaSoToChuc > 0 ? row[dto.IndexColumnMaSoToChuc - 1]?.ToString() ?? string.Empty : string.Empty;
 
                 if (string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(email))
                 {
@@ -132,12 +187,18 @@ namespace syll.be.application.DanhBa.Implements
 
                 totalRowsImported++;
 
-                var parts = hoTen.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var hoTenOriginal = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0
+                    ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty
+                    : string.Empty;
+
+                var hoTenTrimmed = hoTenOriginal.Trim();
+                var parts = hoTenTrimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
                 var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
 
+                
                 emailsToImport.Add(email);
-                importDataMap[email] = (hoTen, hoDem, ten, maSoToChuc);
+                importDataMap[email] = (hoTenOriginal, hoDem, ten, maSoToChuc);
             }
 
             if (emailsToImport.Count == 0)

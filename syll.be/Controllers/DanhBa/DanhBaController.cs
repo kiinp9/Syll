@@ -23,6 +23,20 @@ namespace syll.be.Controllers.DanhBa
             _danhBaService = danhBaService;
             _logger = logger;
         }
+        [Permission(PermissionKeys.DanhBaAdd)]
+        [HttpPost("")]
+        public async Task<ApiResponse> CreateDanhBa([FromBody] CreateDanhBaDto dto)
+        {
+            try
+            {
+                await _danhBaService.Create(dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
         [Permission(PermissionKeys.DanhBaView)]
         [HttpGet("")]
         public ApiResponse Find([FromQuery] FindPagingDanhBaDto dto)

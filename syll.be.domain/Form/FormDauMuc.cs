@@ -23,6 +23,7 @@ namespace syll.be.domain.Form
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        public int IdFormLoai { get; set; }
         public string TenDauMuc { get; set; } = string.Empty;
         public string SoDauMuc { get; set; } = string.Empty;
         public string? CreatedBy { get; set; }
