@@ -113,8 +113,24 @@ namespace syll.be.application.ToChuc.Implements
                 TotalItems = query.Count()
             };
         }
+        public List<GetListDropDownDto> GetListDropDown()
+        {
+            _logger.LogInformation($"{nameof(GetListDropDown)}");
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = IsSuperAdmin();
+            var query = from tc in _syllDbContext.ToChucs
+                        where !tc.Deleted
+                        orderby tc.Id ascending
+                        select new GetListDropDownDto
+                        {
+                            Id = tc.Id,
+                            TenToChuc = tc.TenToChuc
+                        }; 
+            var data = query.ToList();
+            return data;
+        }
 
 
-       
+
     }
 }

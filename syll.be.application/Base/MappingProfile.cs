@@ -19,7 +19,7 @@ namespace syll.be.application.Base
             CreateMap<AppUser, ViewUserDto>();
             CreateMap<AppUser, ViewMeDto>();
             CreateMap<domain.ToChuc.ToChuc, ViewToChucDto>();
-            CreateMap<domain.DanhBa.DanhBa, ViewDanhBaDto>();
+            //CreateMap<domain.DanhBa.DanhBa, ViewDanhBaDto>();
         } 
         }
 }

@@ -29,5 +29,9 @@ namespace syll.be.shared.HttpRequest.Error
 
         public const int ServiceAccountErrorNotFound = 301;
         public const int GoogleSheetUrlErrorInvalid = 302;
+
+        public const int DanhBaErrorNotFound = 401;
+        public const int DanhBaErrorNotFoundInToChuc = 402;
     }
+
 }

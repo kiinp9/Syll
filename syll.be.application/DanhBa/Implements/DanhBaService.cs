@@ -46,6 +46,101 @@ namespace syll.be.application.DanhBa.Implements
             _configuration = configuration;
             //_memoryCache = memoryCache;
         }
+        public async Task Create (CreateDanhBaDto dto)
+        {
+            _logger.LogInformation($"{nameof(Create)} dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var vietnamTime = GetVietnamTime();
+        
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var parts = dto.HoVaTen.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
+                var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
+
+                var danhBa = new domain.DanhBa.DanhBa
+                {
+                    HoVaTen = dto.HoVaTen,
+                    HoDem = hoDem,
+                    Ten = ten,
+                    Email = dto.Email,
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+
+                _syllDbContext.DanhBas.Add(danhBa);
+                await _syllDbContext.SaveChangesAsync();
+
+                var danhBaId = danhBa.Id;
+
+                var toChuc = await _syllDbContext.ToChucs
+                    .FirstOrDefaultAsync(tc => tc.Id == dto.IdToChuc && !tc.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+
+                var toChucDanhBa = new domain.ToChuc.ToChucDanhBa
+                {
+                    IdToChuc = toChuc.Id,
+                    IdDanhBa = danhBaId,
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+
+                _syllDbContext.ToChucDanhBa.Add(toChucDanhBa);
+                await _syllDbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+        }
+
+        public async Task Update (UpdateDanhBaDto dto)
+        {
+            _logger.LogInformation($"{nameof(Update)} dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var vietnamTime = GetVietnamTime();
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var parts = dto.HoVaTen.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
+                var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
+
+                var danhBa = await _syllDbContext.DanhBas
+                .FirstOrDefaultAsync(db => db.Id == dto.Id && !db.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
+                var toChuc = await _syllDbContext.ToChucs.FirstOrDefaultAsync(x => x.Id == dto.Id && !x.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+                danhBa.HoVaTen = dto.HoVaTen;
+                danhBa.HoDem = hoDem;
+                danhBa.Ten = ten;
+                danhBa.Email = dto.Email;
+                _syllDbContext.DanhBas.Update(danhBa);
+
+                var toChucDanhBa = await _syllDbContext.ToChucDanhBa.FirstOrDefaultAsync(x => x.IdToChuc == dto.CurrentIdToChuc && x.IdDanhBa == dto.Id && !x.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFoundInToChuc);
+                toChucDanhBa.IdToChuc = dto.IdToChuc;
+                _syllDbContext.ToChucDanhBa.Update(toChucDanhBa);
+                await _syllDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+            }
+            catch 
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        
         public BaseResponsePagingDto<ViewDanhBaDto> FindDanhBa(FindPagingDanhBaDto dto)
         {
             _logger.LogInformation($"{nameof(FindDanhBa)} dto={JsonSerializer.Serialize(dto)}");
@@ -59,12 +154,94 @@ namespace syll.be.application.DanhBa.Implements
                                   || db.Ten.Contains(dto.Keyword)
                                   || db.Email.Contains(dto.Keyword))
                         orderby db.Id ascending
-                        select db;
+                        select new ViewDanhBaDto
+                        {
+                            Id = db.Id,
+                            HoVaTen = db.HoVaTen,
+                            HoDem = db.HoDem,
+                            Ten = db.Ten,
+                            Email = db.Email,
+                            Items = (from tcdb in _syllDbContext.ToChucDanhBa
+                                     join tc in _syllDbContext.ToChucs on tcdb.IdToChuc equals tc.Id
+                                     where !tcdb.Deleted && !tc.Deleted && tcdb.IdDanhBa == db.Id
+                                     select new ViewDanhBaWithToChucDto
+                                     {
+                                         Id = tc.Id,
+                                         TenToChuc = tc.TenToChuc,
+                                         LoaiToChuc = tc.LoaiToChuc,
+                                         MaSoToChuc = tc.MaSoToChuc ?? string.Empty,
+                                     }).ToList()
+                        };
             var data = query.Paging(dto).ToList();
-            var items = _mapper.Map<List<ViewDanhBaDto>>(data);
+
             var response = new BaseResponsePagingDto<ViewDanhBaDto>
             {
-                Items = items,
+                Items = data,
+                TotalItems = query.Count()
+            };
+            return response;
+        }
+        public async Task Delete(int idToChuc, int idDanhBa)
+        {
+            _logger.LogInformation($"{nameof(Delete)} idToChuc={idToChuc}, idDanhBa={idDanhBa}");
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var vietnamTime = GetVietnamTime();
+                var currentUserId = getCurrentUserId();
+                var toChucDanhBa = await _syllDbContext.ToChucDanhBa
+                    .FirstOrDefaultAsync(tcdb => tcdb.IdToChuc == idToChuc && tcdb.IdDanhBa == idDanhBa && !tcdb.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFoundInToChuc);
+                var danhBa = await _syllDbContext.DanhBas
+                    .FirstOrDefaultAsync(db => db.Id == idDanhBa && !db.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
+                var toChuc = await _syllDbContext.ToChucs
+                    .FirstOrDefaultAsync(tc => tc.Id == idToChuc && !tc.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+                toChucDanhBa.Deleted = true;
+                toChucDanhBa.DeletedBy = currentUserId;
+                toChucDanhBa.DeletedDate = vietnamTime;
+                _syllDbContext.ToChucDanhBa.Update(toChucDanhBa);
+                await _syllDbContext.SaveChangesAsync();
+                danhBa.Deleted = true;
+                danhBa.DeletedBy = currentUserId;
+                danhBa.DeletedDate = vietnamTime;
+                _syllDbContext.DanhBas.Update(danhBa);
+                await _syllDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public BaseResponsePagingDto<ViewDanhBaAccordingToChucDto> FindPagingDanhBaAccordingToChuc (FindPagingDanhBaAccordingToChucDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindPagingDanhBaAccordingToChuc)} dto={JsonSerializer.Serialize(dto)}");
+            var query = from tcdb in _syllDbContext.ToChucDanhBa
+                        join db in _syllDbContext.DanhBas on tcdb.IdDanhBa equals db.Id
+                        where !tcdb.Deleted && !db.Deleted && tcdb.IdToChuc == dto.IdToChuc
+                              && (string.IsNullOrEmpty(dto.Keyword)
+                                  || db.HoVaTen.Contains(dto.Keyword)
+                                  || db.HoDem.Contains(dto.Keyword)
+                                  || db.Ten.Contains(dto.Keyword)
+                                  || db.Email.Contains(dto.Keyword))
+                        orderby db.Id ascending
+                        select new ViewDanhBaAccordingToChucDto
+                        {
+                            Id = db.Id,
+                            HoVaTen = db.HoVaTen,
+                            HoDem = db.HoDem,
+                            Ten = db.Ten,
+                            Email = db.Email
+                        };
+            var data = query.Paging(dto).ToList();
+
+            var response = new BaseResponsePagingDto<ViewDanhBaAccordingToChucDto>
+            {
+                Items = data,
                 TotalItems = query.Count()
             };
             return response;
@@ -121,9 +298,9 @@ namespace syll.be.application.DanhBa.Implements
                     continue;
                 }
 
-                var hoTen = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0 ? row[dto.IndexColumnHoTen - 1]?.Trim() : string.Empty;
-                var email = dto.IndexColumnEmail - 1 < row.Count && dto.IndexColumnEmail > 0 ? row[dto.IndexColumnEmail - 1]?.Trim() : string.Empty;
-                var maSoToChuc = dto.IndexColumnMaSoToChuc - 1 < row.Count && dto.IndexColumnMaSoToChuc > 0 ? row[dto.IndexColumnMaSoToChuc - 1]?.Trim() : string.Empty;
+                var hoTen = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0 ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty : string.Empty;
+                var email = dto.IndexColumnEmail - 1 < row.Count && dto.IndexColumnEmail > 0 ? row[dto.IndexColumnEmail - 1]?.ToString() ?? string.Empty : string.Empty;
+                var maSoToChuc = dto.IndexColumnMaSoToChuc - 1 < row.Count && dto.IndexColumnMaSoToChuc > 0 ? row[dto.IndexColumnMaSoToChuc - 1]?.ToString() ?? string.Empty : string.Empty;
 
                 if (string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(email))
                 {
@@ -132,12 +309,18 @@ namespace syll.be.application.DanhBa.Implements
 
                 totalRowsImported++;
 
-                var parts = hoTen.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var hoTenOriginal = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0
+                    ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty
+                    : string.Empty;
+
+                var hoTenTrimmed = hoTenOriginal.Trim();
+                var parts = hoTenTrimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
                 var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
 
+                
                 emailsToImport.Add(email);
-                importDataMap[email] = (hoTen, hoDem, ten, maSoToChuc);
+                importDataMap[email] = (hoTenOriginal, hoDem, ten, maSoToChuc);
             }
 
             if (emailsToImport.Count == 0)

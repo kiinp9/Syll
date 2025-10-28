@@ -67,6 +67,20 @@ namespace syll.be.Controllers.ToChuc
             }
         }
         [Permission(PermissionKeys.ToChucView)]
+        [HttpGet("list-drop-down")]
+        public ApiResponse GetListToChucDropDown()
+        {
+            try
+            {
+                var data = _toChucService.GetListDropDown();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+        [Permission(PermissionKeys.ToChucView)]
         [HttpGet("")]
         public ApiResponse Find([FromQuery] FindPagingToChucDto dto)
         {
