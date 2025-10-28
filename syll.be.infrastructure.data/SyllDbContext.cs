@@ -21,6 +21,7 @@ namespace syll.be.infrastructure.data
         public DbSet<ToChuc> ToChucs { get; set; }
         public DbSet<ToChucDanhBa> ToChucDanhBa { get; set; }
         public DbSet<DanhBa> DanhBas { get; set; }
+        public DbSet<FormLoai> FormLoais { get; set; }
         public DbSet<FormData> FormDatas { get; set; }
         public DbSet<FormDauMuc> FormDauMucs { get; set; }
         public DbSet<FormTruongData> FormTruongDatas { get; set; }
@@ -38,6 +39,11 @@ namespace syll.be.infrastructure.data
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<DanhBa>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<FormLoai>(entity =>
             {
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");

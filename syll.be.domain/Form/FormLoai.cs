@@ -12,21 +12,21 @@ using System.Xml.Linq;
 
 namespace syll.be.domain.Form
 {
-    [Table(nameof(FormData), Schema = DbSchemas.Core)]
+    [Table(nameof(FormLoai), Schema = DbSchemas.Core)]
     [Index(
       nameof(Id),
       IsUnique = false,
-      Name = $"IX_{nameof(FormData)}"
+      Name = $"IX_{nameof(FormLoai)}"
     )]
-    public class FormData: ISoftDeleted
+    public  class FormLoai: ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int IdFormLoai { get; set; }
-        public string Data { get; set; } = string.Empty;
-        public int IdTruongData { get; set; }
-        public int IdDanhBa { get; set; }
+        public string TenForm { get; set; } = string.Empty;
+        public string MoTa { get; set; } = string.Empty;
+        public DateTime? ThoiGianBatDau { get; set; } 
+        public DateTime? ThoiGianKetThuc { get; set; } 
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }
