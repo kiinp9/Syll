@@ -14,5 +14,6 @@ namespace syll.be.application.DanhBa.Dtos
         public int IndexRowHeader { get; set; }
         public int IndexColumnHoTen { get; set; }
         public int IndexColumnEmail { get; set; }
+        public int IndexColumnMaSoToChuc { get; set; }
     }
 }

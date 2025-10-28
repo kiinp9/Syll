@@ -25,5 +25,9 @@ namespace syll.be.shared.HttpRequest.Error
 
         public const int ToChucErrorNotFound = 201;
         public const int ToChucErrorLoaiToChucNotFound = 202;
+
+
+        public const int ServiceAccountErrorNotFound = 301;
+        public const int GoogleSheetUrlErrorInvalid = 302;
     }
 }

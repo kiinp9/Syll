@@ -37,5 +37,20 @@ namespace syll.be.Controllers.DanhBa
                 return OkException(ex);
             }
         }
+
+        [Permission(PermissionKeys.DanhBaImport)]
+        [HttpPost("import")]
+        public async Task<ApiResponse> ImportDanhBa([FromBody] ImportDanhBaDto dto)
+        {
+            try
+            {
+                var result = await _danhBaService.ImportDanhBa(dto);
+                return new(result);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
     }
 }
