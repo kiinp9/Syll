@@ -37,6 +37,20 @@ namespace syll.be.Controllers.DanhBa
                 return OkException(ex);
             }
         }
+        [Permission(PermissionKeys.DanhBaUpdate)]
+        [HttpPut("")]
+        public async Task<ApiResponse> UpdateDanhBa([FromBody] UpdateDanhBaDto dto)
+        {
+            try
+            {
+                await _danhBaService.Update(dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
         [Permission(PermissionKeys.DanhBaView)]
         [HttpGet("")]
         public ApiResponse Find([FromQuery] FindPagingDanhBaDto dto)
@@ -51,7 +65,34 @@ namespace syll.be.Controllers.DanhBa
                 return OkException(ex);
             }
         }
-
+        [Permission(PermissionKeys.DanhBaView)]
+        [HttpGet("according-to-to-chuc")]
+        public ApiResponse FindPagingDanhBaAccordingToChuc([FromQuery] FindPagingDanhBaAccordingToChucDto dto)
+        {
+            try
+            {
+                var result = _danhBaService.FindPagingDanhBaAccordingToChuc(dto);
+                return new(result);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+        [Permission(PermissionKeys.DanhBaDelete)]
+        [HttpDelete("{idDanhBa}/to-chuc/{idToChuc}")]
+        public async Task<ApiResponse> DeleteDanhBa([FromRoute]int idDanhBa,[FromRoute] int idToChuc)
+        {
+            try
+            {
+                await _danhBaService.Delete(idToChuc, idDanhBa);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
         [Permission(PermissionKeys.DanhBaImport)]
         [HttpPost("import")]
         public async Task<ApiResponse> ImportDanhBa([FromBody] ImportDanhBaDto dto)

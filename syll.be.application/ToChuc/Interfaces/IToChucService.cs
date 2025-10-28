@@ -14,5 +14,6 @@ namespace syll.be.application.ToChuc.Interfaces
         public void Update(int idToChuc, UpdateToChucDto dto);
         public void Delete(int idToChuc);
         public BaseResponsePagingDto<ViewToChucDto> Find(FindPagingToChucDto dto);
+        public List<GetListDropDownDto> GetListDropDown();
     }
 }

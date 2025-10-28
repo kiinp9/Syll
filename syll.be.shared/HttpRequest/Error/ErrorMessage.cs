@@ -26,6 +26,7 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.ServiceAccountErrorNotFound,"Không tìm thấy đường dẫn file service-account" },
             { ErrorCodes.GoogleSheetUrlErrorInvalid, "URL Google Sheet không hợp lệ hoặc không thể truy cập được" },
             { ErrorCodes.DanhBaErrorNotFound, "Danh bạ không tồn tại"},
+            { ErrorCodes.DanhBaErrorNotFoundInToChuc, "Danh bạ không tồn tại trong tổ chức"},
 
         };
 
