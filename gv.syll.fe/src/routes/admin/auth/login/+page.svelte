@@ -10,8 +10,8 @@
 </script>
 
 <div class="h-screen w-screen flex justify-center items-center">
-	<div class="w-full lg:w-1/2 flex-col flex items-center">
-		<form method="POST" action="?/login" class="w-full">
+	<div class="w-full lg:w-1/2 flex-col flex items-center justify-center">
+		<form method="POST" action="?/login" class="">
 			<Card.Root class="w-full max-w-sm pt-0">
 				<div class="bg-[#002a5c] p-5 rounded-tl-md rounded-tr-md">
 					<img src={logo} alt="" class="w-full" />
