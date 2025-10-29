@@ -6,6 +6,7 @@ import {
 	AUTH_CLIENT_ID,
 	AUTH_CLIENT_SECRET,
 } from '$env/static/private'; // Not exposed to client
+import { ENDPOINTS } from '$lib/api/endpoint';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Wrap the default fetch with your interceptor
@@ -23,14 +24,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 			};
 		}
 
-        console.log('Fetching:', input);
+        console.log('FETCHING:', input);
 
 		// Make the original request
 		let response = await originalFetch(input, init);
 
 		// If 401, try refresh token flow
 		if (response.status === 401 && refreshToken) {
-			const endpointRefresh = `${API_BASE_URL}/connect/token`;
+			const endpointRefresh = `${API_BASE_URL}${ENDPOINTS.connectToken}`;
 
 			const refreshParams = new URLSearchParams();
 			refreshParams.append('grant_type', 'refresh_token');

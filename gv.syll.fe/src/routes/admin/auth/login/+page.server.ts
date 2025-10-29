@@ -7,6 +7,7 @@ import {
 	AUTH_SCOPE
 } from '$env/static/private'; // Not exposed to client
 import { redirect } from '@sveltejs/kit';
+import { ENDPOINTS } from '$lib/api/endpoint';
 
 export const actions = {
 	login: async ({ request, cookies, fetch }) => {
@@ -23,7 +24,7 @@ export const actions = {
 		params.append('client_secret', AUTH_CLIENT_SECRET);
 		params.append('scope', AUTH_SCOPE);
 
-		const endpoint = `${API_BASE_URL}/connect/token`;
+		const endpoint = `${API_BASE_URL}${ENDPOINTS.connectToken}`;
 
 		const res = await fetch(`${endpoint}`, {
 			method: 'POST',
