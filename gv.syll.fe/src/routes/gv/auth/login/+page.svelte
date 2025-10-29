@@ -10,11 +10,11 @@
 	export let data;
 
 	// You can destructure it if you want
-	const { apiBaseUrl, authClientId } = data;
+	const { apiBaseUrl, authClientId, appUrl } = data;
 
 	async function onClickLoginGoogle() {
 		const backendUrl = apiBaseUrl;
-		const redirectUri = `http://localhost:5173/gv/auth/sso/google`;
+		const redirectUri = `${appUrl}/gv/auth/sso/google`;
 		const { codeChallenge, codeVerifier } = await CryptoUtils.generatePKCECodes();
 
 		// sessionStorage.setItem(AuthConstants.SESSION_PKCE_CODE_VERIFIER, codeVerifier);
