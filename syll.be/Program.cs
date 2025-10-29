@@ -95,16 +95,16 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
 
 #region auth
 string secretKey = builder.Configuration.GetSection("AuthServer:SecretKey").Value!;
-//string googleClientId = builder.Configuration.GetSection("AuthServer:Google:ClientId").Value!;
-//string googleClientSecret = builder.Configuration.GetSection("AuthServer:Google:ClientSecret").Value!;
-//string googleRedirectUri = builder.Configuration.GetSection("AuthServer:Google:RedirectUri").Value!;
+string googleClientId = builder.Configuration.GetSection("AuthServer:Google:ClientId").Value!;
+string googleClientSecret = builder.Configuration.GetSection("AuthServer:Google:ClientSecret").Value!;
+string googleRedirectUri = builder.Configuration.GetSection("AuthServer:Google:RedirectUri").Value!;
 
 //string msClientId = builder.Configuration["AuthServer:MS:ClientId"];
 //string msClientSecret = builder.Configuration.GetSection("AuthServer:MS:ClientSecret").Value!;
 //string msRedirectUri = builder.Configuration.GetSection("AuthServer:MS:RedirectUri").Value!;
 
 builder.Services.Configure<AuthServerSettings>(builder.Configuration.GetSection("AuthServer"));
-//builder.Services.Configure<AuthGoogleSettings>(builder.Configuration.GetSection("AuthServer:Google"));
+builder.Services.Configure<AuthGoogleSettings>(builder.Configuration.GetSection("AuthServer:Google"));
 //builder.Services.Configure<AuthMsSettings>(builder.Configuration.GetSection("AuthServer:MS"));
 //builder.Services.Configure<CdsConnectSettings>(builder.Configuration.GetSection("CdsConnect:Url"));
 
@@ -186,15 +186,15 @@ builder.Services.AddAuthentication(options =>
             options.RequireHttpsMetadata = false;
         }
     )
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
-    /*.AddGoogle(options =>
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddGoogle(options =>
     {
         //options.ClientId = googleClientId;
         //options.ClientSecret = googleClientSecret;
         options.ReturnUrlParameter = "redirect_uri";
         //options.CallbackPath = googleRedirectUri;
-    })
-    .AddMicrosoftAccount(options =>
+    });
+    /*.AddMicrosoftAccount(options =>
     {
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         //options.ClientId = msClientId;
