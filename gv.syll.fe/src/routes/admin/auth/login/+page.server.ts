@@ -6,7 +6,7 @@ import {
 	AUTH_CLIENT_SECRET,
 	AUTH_SCOPE
 } from '$env/static/private'; // Not exposed to client
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import { ENDPOINTS } from '$lib/api/endpoint';
 
 export const actions = {
@@ -55,15 +55,20 @@ export const actions = {
 				throw redirect(302, '/admin/home'); // or '/'
 			}
 
+			console.log('LOGIN ERROR RESULT => ', result);
+
 			return {
 				success: false,
 				msg: result.error_description || 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
 			};
 		} catch (error) {
-            return {
-                success: false,
-                msg: 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
-            }
-        }
+			if (isRedirect(error)) throw error;
+
+			console.error('Login error:', error);
+			return {
+				success: false,
+				msg: 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
+			};
+		}
 	}
 } satisfies Actions;
