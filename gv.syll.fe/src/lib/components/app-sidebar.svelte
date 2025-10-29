@@ -1,57 +1,26 @@
 <script lang="ts" module>
-	import NewspaperIcon from "@lucide/svelte/icons/newspaper";
-	import BellIcon from "@lucide/svelte/icons/bell";
-	import ChartColumnIcon from "@lucide/svelte/icons/chart-column";
-	import HouseIcon from "@lucide/svelte/icons/house";
-
 	const data = {
-		user: {
-			name: "Nguyễn Trọng Nghĩa",
-			email: "nghiant@huce.edu.vn",
-			avatar: "/avatars/shadcn.jpg",
-		},
-		navMain: [
-			{
-				url: "/gv/dashboard",
-				title: 'Trang chủ',
-				icon: HouseIcon,
-				// icon: HouseIcon,
-			},
-			{
-				url: "/gv/form",
-				title: 'Quản lý form',
-				icon: NewspaperIcon,
-			},
-			{
-				url: "#",
-				title: 'Thông báo',
-				icon: BellIcon,
-			},
-			{
-				url: "#",
-				title: 'Thống kê',
-				icon: ChartColumnIcon,
-			},
-			
-		],
-		navSecondary: [
-		],
-		projects: [
-			
-		],
+		navSecondary: [],
+		projects: []
 	};
 </script>
 
 <script lang="ts">
-	import NavMain from "./nav-main.svelte";
-	import NavProjects from "./nav-projects.svelte";
-	import NavSecondary from "./nav-secondary.svelte";
-	import NavUser from "./nav-user.svelte";
-	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import CommandIcon from "@lucide/svelte/icons/command";
-	import type { ComponentProps } from "svelte";
+	import NavMain from './nav-main.svelte';
+	import NavProjects from './nav-projects.svelte';
+	import NavSecondary from './nav-secondary.svelte';
+	import NavUser from './nav-user.svelte';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import CommandIcon from '@lucide/svelte/icons/newspaper';
+	import type { ComponentProps } from 'svelte';
+	import type { IViewUserMe } from '$lib/models/user/user.model';
 
-	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
+	let {
+		ref = $bindable(null),
+		navMain = [],
+		user = {} as IViewUserMe,
+		...restProps
+	}: ComponentProps<typeof Sidebar.Root> & { navMain: any[], user: IViewUserMe } = $props();
 </script>
 
 <Sidebar.Root bind:ref variant="inset" {...restProps}>
@@ -77,11 +46,11 @@
 		</Sidebar.Menu>
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<NavMain items={data.navMain} />
+		<NavMain items={navMain} />
 		<NavProjects projects={data.projects} />
 		<NavSecondary items={data.navSecondary} class="mt-auto" />
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<NavUser user={data.user} />
+		<NavUser user={user} />
 	</Sidebar.Footer>
 </Sidebar.Root>

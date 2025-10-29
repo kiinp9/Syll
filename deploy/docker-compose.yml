@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  syll.fe:
+    image: syll.fe.${APP_ENV}
+    container_name: syll.fe_c.${APP_ENV}
+    build:
+      context: ../gv.syll.fe
+      dockerfile: Dockerfile
+      args:
+        APP_ENV: ${APP_FE_ENV}
+    ports:
+      - "6000:3000"
+    restart: unless-stopped
+  syll.be:
+    image: syll.be.${APP_ENV}
+    container_name: syll.be_c.${APP_ENV}
+    build:
+      context: ..
+      dockerfile: ./syll.be/Dockerfile
+    ports:
+      - "6100:8080"
+    restart: unless-stopped
+    environment:
+      - DOTNET_ENVIRONMENT=${APP_BE_ENV}
