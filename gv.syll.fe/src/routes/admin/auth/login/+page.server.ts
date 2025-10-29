@@ -32,31 +32,38 @@ export const actions = {
 			body: params.toString()
 		});
 
-		const result = await res.json();
+		try {
+			const result = await res.json();
 
-		if (res.ok) {
-			// OAuth token endpoint typically returns `access_token`
-			const accessToken = result.access_token;
-			const refreshToken = result.refresh_token;
+			if (res.ok) {
+				// OAuth token endpoint typically returns `access_token`
+				const accessToken = result.access_token;
+				const refreshToken = result.refresh_token;
 
-			cookies.set('access_token', accessToken, {
-				path: '/',
-				httpOnly: true,
-				secure: true,
-				maxAge: result.expires_in // in seconds
-			});
-			cookies.set('refresh_token', refreshToken, {
-				path: '/',
-				httpOnly: true,
-				secure: true,
-				maxAge: 60 * 60 * 24 * 365 // 1 day
-			});
-			throw redirect(302, '/admin/home'); // or '/'
-		}
+				cookies.set('access_token', accessToken, {
+					path: '/',
+					httpOnly: true,
+					secure: true,
+					maxAge: result.expires_in // in seconds
+				});
+				cookies.set('refresh_token', refreshToken, {
+					path: '/',
+					httpOnly: true,
+					secure: true,
+					maxAge: 60 * 60 * 24 * 365 // 1 day
+				});
+				throw redirect(302, '/admin/home'); // or '/'
+			}
 
-		return {
-			success: false,
-			msg: result.error_description || 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
-		};
+			return {
+				success: false,
+				msg: result.error_description || 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
+			};
+		} catch (error) {
+            return {
+                success: false,
+                msg: 'Có sự cố khi đăng nhập. Vui lòng thử lại sau'
+            }
+        }
 	}
 } satisfies Actions;
