@@ -189,8 +189,8 @@ builder.Services.AddAuthentication(options =>
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddGoogle(options =>
     {
-        //options.ClientId = googleClientId;
-        //options.ClientSecret = googleClientSecret;
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
         options.ReturnUrlParameter = "redirect_uri";
         //options.CallbackPath = googleRedirectUri;
     });

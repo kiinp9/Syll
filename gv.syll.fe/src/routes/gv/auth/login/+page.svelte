@@ -2,14 +2,34 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import logo from '$lib/assets/logo-hucetext-trans.png';
-    import {
-        IconBrandGoogleFilled
-    } from '@tabler/icons-svelte';
-	import { goto } from '$app/navigation';
+	import { IconBrandGoogleFilled } from '@tabler/icons-svelte';
+	import { CryptoUtils } from '$lib/crypto.utils';
+	import { AuthConstants } from '$lib/constants/auth.constants';
 
-    function onClickLoginGoogle() {
-        goto('/gv/syll')
-    }
+	// `data` comes automatically from the server-side load function
+	export let data;
+
+	// You can destructure it if you want
+	const { apiBaseUrl, authClientId } = data;
+
+	async function onClickLoginGoogle() {
+		const backendUrl = apiBaseUrl;
+		const redirectUri = `http://localhost:5173/gv/auth/sso/google`;
+		const { codeChallenge, codeVerifier } = await CryptoUtils.generatePKCECodes();
+
+		// sessionStorage.setItem(AuthConstants.SESSION_PKCE_CODE_VERIFIER, codeVerifier);
+		document.cookie = `${AuthConstants.SESSION_PKCE_CODE_VERIFIER}=${codeVerifier}`;
+
+		const url =
+			`${backendUrl}/connect/authorize?` +
+			`client_id=${encodeURIComponent(authClientId)}` +
+			`&redirect_uri=${encodeURIComponent(redirectUri)}` +
+			`&response_type=code` +
+			`&scope=openid offline_access` +
+			`&prompt=login&code_challenge=${codeChallenge}&code_challenge_method=${AuthConstants.PKCE_CODE_CHALLENGE_METHOD}`;
+		console.log(url);
+		window.location.href = url;
+	}
 </script>
 
 <div class="h-screen w-screen flex justify-center items-center">
@@ -26,8 +46,9 @@
 			</Card.Header>
 			<Card.Footer class="flex-col gap-2">
 				<Button type="button" class="w-full cursor-pointer" onclick={onClickLoginGoogle}>
-                    <IconBrandGoogleFilled />
-                    Đăng nhập bằng Email Google</Button>
+					<IconBrandGoogleFilled />
+					Đăng nhập bằng Email Google</Button
+				>
 			</Card.Footer>
 		</Card.Root>
 	</div>
