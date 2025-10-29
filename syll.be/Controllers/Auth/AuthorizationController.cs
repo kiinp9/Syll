@@ -305,16 +305,16 @@ namespace syll.be.Controllers.Auth
             var request = HttpContext.GetOpenIddictServerRequest()
                   ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-            // If user not logged in, redirect them to Microsoft
+            // If user not logged in, redirect them to Google
             if (!User.Identity?.IsAuthenticated ?? true)
             {
-                _logger.LogInformation("User not authenticated, redirecting to Microsoft login");
+                _logger.LogInformation("User not authenticated, redirecting to Google login");
 
                 var props = new AuthenticationProperties
                 {
                     RedirectUri = Url.Action("ExternalCallback", new { returnUrl = Request.Path + QueryString.Create(Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString())) })
                 };
-                return Challenge(props, MicrosoftAccountDefaults.AuthenticationScheme);
+                return Challenge(props, "Google");
             }
 
             _logger.LogInformation("User authenticated, processing authorization for user: {UserId}", User.FindFirst(Claims.Subject)?.Value);
@@ -364,12 +364,12 @@ namespace syll.be.Controllers.Auth
                 return BadRequest($"Remote authentication error: {remoteError}");
             }
 
-            // Authenticate using Microsoft scheme
-            var result = await HttpContext.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+            // Authenticate using Google scheme
+            var result = await HttpContext.AuthenticateAsync("Google");
             if (!result.Succeeded)
             {
-                _logger.LogError("Microsoft authentication failed");
-                return BadRequest("MS authentication failed");
+                _logger.LogError("Google authentication failed");
+                return BadRequest("Google authentication failed");
             }
 
             var claims = result.Principal!.Identities.First().Claims;
@@ -379,7 +379,7 @@ namespace syll.be.Controllers.Auth
             _logger.LogInformation("External authentication successful for email: {Email}", email);
 
             //var user = await _usersService.FindByMsAccount(email!);
-            var user = userManager.Users.AsNoTracking().FirstOrDefault(x => x.MsAccount == email);
+            var user = userManager.Users.AsNoTracking().FirstOrDefault(x => x.Email == email);
 
             if (user == null)
             {
@@ -407,7 +407,7 @@ namespace syll.be.Controllers.Auth
             identity.SetClaim(Claims.Subject, user.Id);
             identity.SetClaim(Claims.Name, user.FullName);
             identity.SetClaim(Claims.Username, user.UserName);
-            identity.SetClaim(CustomClaimTypes.UserType, "SV");
+            identity.SetClaim(CustomClaimTypes.UserType, "User");
             var roles = await userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
