@@ -105,7 +105,7 @@ namespace syll.be.Controllers.Auth
                     identity.SetClaim(Claims.Subject, subject);
                     identity.SetClaim(Claims.Name, user.FullName);
                     identity.SetClaim(Claims.Username, user.UserName);
-                    identity.SetClaim(CustomClaimTypes.UserType, "SV");
+                    identity.SetClaim(CustomClaimTypes.UserType, "User");
                     var roles = await userManager.GetRolesAsync(user);
                     foreach (var role in roles)
                     {
