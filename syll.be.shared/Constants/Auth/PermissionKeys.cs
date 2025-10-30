@@ -36,6 +36,13 @@ namespace syll.be.shared.Constants.Auth
         public const string DanhBaView = Function + "DanhBaView";
         public const string DanhBaImport = Function + "DanhBaImport";
 
+
+        public const string CategoryForm = "OL Form";
+        public const string FormAdd = Function + "FormAdd";
+        public const string FormUpdate = Function + "FormUpdate";
+        public const string FormDelete = Function + "FormDelete";
+        public const string FormView = Function + "FormView";
+
         public static readonly (string Key, string Name, string Category)[] All =
         {
             (MenuUserManagement, "Menu Quản lý User", "Menu"),

@@ -30,8 +30,13 @@ namespace syll.be.shared.HttpRequest.Error
         public const int ServiceAccountErrorNotFound = 301;
         public const int GoogleSheetUrlErrorInvalid = 302;
 
-        public const int DanhBaErrorNotFound = 401;
+        public const int DanhBaErrorNotFound = 403;
         public const int DanhBaErrorNotFoundInToChuc = 402;
+
+        public const int FormLoaiErrorNotFound = 501;
+        public const int FormDauMucErrorNotFound = 502;
+        public const int FormDanhBaErrorNotFound = 503;
+        public const int FormTruongDataErrorNotFound = 504;
     }
 
 }

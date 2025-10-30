@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using syll.be.domain.Auth;
 using syll.be.domain.DanhBa;
 using syll.be.domain.Form;
+using syll.be.domain.FormDanhBa;
 using syll.be.domain.ToChuc;
 using syll.be.shared.Constants.Db;
 using System;
@@ -25,6 +26,7 @@ namespace syll.be.infrastructure.data
         public DbSet<FormData> FormDatas { get; set; }
         public DbSet<FormDauMuc> FormDauMucs { get; set; }
         public DbSet<FormTruongData> FormTruongDatas { get; set; }
+        public DbSet<FormDanhBa> FormDanhBa { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -59,6 +61,11 @@ namespace syll.be.infrastructure.data
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<FormTruongData>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<FormDanhBa>(entity =>
             {
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");

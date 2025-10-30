@@ -13,6 +13,8 @@ using syll.be.application.Auth.Interfaces;
 using syll.be.application.Base;
 using syll.be.application.DanhBa.Implements;
 using syll.be.application.DanhBa.Interfaces;
+using syll.be.application.Form.Implements;
+using syll.be.application.Form.Interfaces;
 using syll.be.application.ToChuc.Implements;
 using syll.be.application.ToChuc.Interfaces;
 using syll.be.domain.Auth;
@@ -225,6 +227,7 @@ builder.Services.ConfigureHangfire(hangfireConnectionString);
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IToChucService, ToChucService>();
 builder.Services.AddScoped<IDanhBaService, DanhBaService>();
+builder.Services.AddScoped<IFormService, FormService>();
 
 #endregion
 

@@ -10,30 +10,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace syll.be.domain.Form
+namespace syll.be.domain.FormDanhBa
 {
-    [Table(nameof(FormTruongData), Schema = DbSchemas.Core)]
+    [Table(nameof(FormDanhBa), Schema = DbSchemas.Core)]
     [Index(
-    nameof(Id),
-    IsUnique = false,
-    Name = $"IX_{nameof(FormTruongData)}"
+     nameof(Id),
+     IsUnique = false,
+     Name = $"IX_{nameof(FormDanhBa)}"
     )]
-    public class FormTruongData : ISoftDeleted
+    public class FormDanhBa :ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int IdFormLoai { get; set; }
-        public int IdDauMuc { get; set; }
-        public string TenTruong { get; set; } = string.Empty;
-        //public int Order { get; set; }
-        //public bool IsShow { get; set; }
-        public string Type { get; set; } = "string";
+        public int IdDanhBa { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }
         public bool Deleted { get; set; }
         public string? DeletedBy { get; set; }
-
     }
 }

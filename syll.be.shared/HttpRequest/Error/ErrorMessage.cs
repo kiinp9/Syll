@@ -27,6 +27,10 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.GoogleSheetUrlErrorInvalid, "URL Google Sheet không hợp lệ hoặc không thể truy cập được" },
             { ErrorCodes.DanhBaErrorNotFound, "Danh bạ không tồn tại"},
             { ErrorCodes.DanhBaErrorNotFoundInToChuc, "Danh bạ không tồn tại trong tổ chức"},
+            { ErrorCodes.FormLoaiErrorNotFound, "Loại form này không tồn tại"},
+            { ErrorCodes.FormDauMucErrorNotFound, "Đầu mục này trong form không tồn tại"},
+            { ErrorCodes.FormDanhBaErrorNotFound, "Người dùng trong danh bạ không đăng kí Form này"},
+            { ErrorCodes.FormTruongDataErrorNotFound,"Trường dữ liệu không tồn tại"},
 
         };
 

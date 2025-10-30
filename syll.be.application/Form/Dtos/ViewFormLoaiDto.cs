@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace syll.be.application.Form.Dtos
 {
-    public class UpdateFormLoaiDto
+    public class ViewFormLoaiDto
     {
         public int Id { get; set; }
-        public string Ten { get; set; } = String.Empty;
-        public string MoTa { get; set; } = String.Empty;
+        public string TenForm { get; set; } = string.Empty;
+        public string MoTa { get; set; } = string.Empty;
         public DateTime? ThoiGianBatDau { get; set; }
         public DateTime? ThoiGianKetThuc { get; set; }
     }

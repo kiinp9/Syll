@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using syll.be.infrastructure.data;
 
@@ -11,9 +12,11 @@ using syll.be.infrastructure.data;
 namespace syll.be.infrastructure.data.Migrations
 {
     [DbContext(typeof(SyllDbContext))]
-    partial class SyllDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251030152622_Add_Column_IdFormLoai")]
+    partial class Add_Column_IdFormLoai
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -678,46 +681,6 @@ namespace syll.be.infrastructure.data.Migrations
                     b.HasIndex(new[] { "Id" }, "IX_FormTruongData");
 
                     b.ToTable("FormTruongData", "core");
-                });
-
-            modelBuilder.Entity("syll.be.domain.FormDanhBa.FormDanhBa", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("getdate()");
-
-                    b.Property<bool>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("IdDanhBa")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdFormLoai")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex(new[] { "Id" }, "IX_FormDanhBa");
-
-                    b.ToTable("FormDanhBa", "core");
                 });
 
             modelBuilder.Entity("syll.be.domain.ToChuc.ToChuc", b =>
