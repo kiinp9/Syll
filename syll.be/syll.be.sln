@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "syll.be", "syll.be.csproj", "{40376B36-43FE-4625-8BF5-4FDEF76C5905}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "syll.be.infrastructure.external", "..\syll.be.infrastructure.external\syll.be.infrastructure.external.csproj", "{2536BC2E-FBA8-4A16-BB00-0E734BB7B846}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "syll.be.shared", "..\syll.be.shared\syll.be.shared.csproj", "{12743F6D-CC10-4DB9-A867-CC149B538862}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "syll.be.lib", "..\syll.be.lib\syll.be.lib.csproj", "{B549DFDF-68F1-4B83-994B-D7031EBCF833}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{12743F6D-CC10-4DB9-A867-CC149B538862}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12743F6D-CC10-4DB9-A867-CC149B538862}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12743F6D-CC10-4DB9-A867-CC149B538862}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B549DFDF-68F1-4B83-994B-D7031EBCF833}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B549DFDF-68F1-4B83-994B-D7031EBCF833}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B549DFDF-68F1-4B83-994B-D7031EBCF833}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B549DFDF-68F1-4B83-994B-D7031EBCF833}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

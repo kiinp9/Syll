@@ -331,7 +331,16 @@ namespace syll.be.Controllers.Auth
             // Use the client_id as the subject identifier.
             //identity.SetClaim(Claims.Subject, "test");
             //identity.SetClaim(Claims.Name, "nghia test");
-
+            identity.SetScopes(
+                    new[]
+                    {
+                        Scopes.OpenId,
+                        Scopes.Email,
+                        Scopes.Profile,
+                        Scopes.Roles,
+                        Scopes.OfflineAccess
+                    }.Intersect(request.GetScopes())
+                );
             identity.SetDestinations(claim => claim.Type switch
             {
                 // Allow the "name" claim to be stored in both the access and identity tokens
@@ -413,6 +422,16 @@ namespace syll.be.Controllers.Auth
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, role));
             }
+            identity.SetScopes(
+                    new[]
+                    {
+                    Scopes.OpenId,
+                    Scopes.Email,
+                    Scopes.Profile,
+                    Scopes.Roles,
+                    Scopes.OfflineAccess
+                    }
+                );
             identity.SetDestinations(claim => claim.Type switch
             {
                 // Allow the "name" claim to be stored in both the access and identity tokens
