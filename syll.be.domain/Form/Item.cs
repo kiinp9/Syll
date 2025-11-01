@@ -12,22 +12,23 @@ using System.Xml.Linq;
 
 namespace syll.be.domain.Form
 {
-    [Table(nameof(FormData), Schema = DbSchemas.Core)]
+    [Table(nameof(Item), Schema = DbSchemas.Core)]
     [Index(
-      nameof(Id),
-      IsUnique = false,
-      Name = $"IX_{nameof(FormData)}"
+    nameof(Id),
+    IsUnique = false,
+    Name = $"IX_{nameof(Item)}"
     )]
-    public class FormData: ISoftDeleted
+    public class Item : ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int IdFormLoai { get; set; }
-        public string Data { get; set; } = string.Empty;
-        public int IdTruongData { get; set; }
-        public int IdDanhBa { get; set; }
-        public int? IndexRowTable { get; set; }
+        public int IdRow { get; set; }
+        public int Type { get; set; } 
+        // Order Item trong Row
+        public int Order { get; set; }
+        // phần trăm hiển thị của item trong row
+        public int Ratio { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

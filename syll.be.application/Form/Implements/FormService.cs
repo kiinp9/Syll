@@ -111,81 +111,9 @@ namespace syll.be.application.Form.Implements
             _syllDbContext.SaveChanges();
         }
 
-        public void CreateFormDauMuc(CreateFormDauMucDto dto)
-        {
-            _logger.LogInformation($"{nameof(CreateFormDauMuc)}  dto={JsonSerializer.Serialize(dto)}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdFormLoai && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+      
 
-            var vietNamNow = GetVietnamTime();
-            var currentUserId = getCurrentUserId();
-            var formDauMuc = new domain.Form.FormDauMuc
-            {
-                IdFormLoai = dto.IdFormLoai,
-                TenDauMuc = dto.TenDauMuc,
-                SoDauMuc = dto.SoDauMuc,
-                CreatedBy = currentUserId,
-                CreatedDate = vietNamNow,
-                Deleted = false
-            };
-            _syllDbContext.FormDauMucs.Add(formDauMuc);
-            _syllDbContext.SaveChanges();
-        }
-
-        public void UpdateFormDauMuc(UpdateFormDauMucDto dto)
-        {
-            _logger.LogInformation($"{nameof(UpdateFormDauMuc)}  dto={JsonSerializer.Serialize(dto)}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdForm && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
-            var formDauMuc = _syllDbContext.FormDauMucs.FirstOrDefault(x => x.Id == dto.Id && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormDauMucErrorNotFound);
-            var vietNamNow = GetVietnamTime();
-            var currentUserId = getCurrentUserId();
-            formDauMuc.TenDauMuc = dto.TenDauMuc;
-            formDauMuc.SoDauMuc = dto.SoDauMuc;
-            _syllDbContext.FormDauMucs.Update(formDauMuc);
-            _syllDbContext.SaveChanges();
-        }
-
-        public void DeleteFormDauMuc(int idFormDauMuc,int idFormLoai)
-        {
-            _logger.LogInformation($"{nameof(DeleteFormDauMuc)}  idFormDauMuc={idFormDauMuc}, idFormLoai ={idFormLoai}");
-            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
-            var formDauMuc = _syllDbContext.FormDauMucs.FirstOrDefault(x => x.Id == idFormDauMuc && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormDauMucErrorNotFound);
-            var vietNamNow = GetVietnamTime();
-            var currentUserId = getCurrentUserId();
-            formDauMuc.Deleted = true;
-            formDauMuc.DeletedBy = currentUserId;
-            formDauMuc.DeletedDate = vietNamNow;
-            _syllDbContext.FormDauMucs.Update(formDauMuc);
-            _syllDbContext.SaveChanges();
-        }
-
-        public List<ViewFormDauMucDto> GetFormDauMucByidFormLoai(int idFormLoai)
-        {
-            _logger.LogInformation($"{nameof(GetFormDauMucByidFormLoai)}  idFormLoai={idFormLoai}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
-            var dauMucs = _syllDbContext.FormDauMucs
-                .Where(x => x.IdFormLoai == idFormLoai && !x.Deleted)
-                .OrderBy (x => x.Id)
-                .ToList();
-            var result = _mapper.Map<List<ViewFormDauMucDto>>(dauMucs);
-            return result;
-        }
-
-        public ViewFormDauMucByIdDto GetFormDauMucById( int idDauMuc)
-        {
-            _logger.LogInformation($"{nameof(GetFormDauMucById)}  idDauMuc={idDauMuc}");
-            var dauMuc = _syllDbContext.FormDauMucs.FirstOrDefault(x => x.Id == idDauMuc && !x.Deleted )
-                ?? throw new UserFriendlyException(ErrorCodes.FormDauMucErrorNotFound);
-            var result = _mapper.Map<ViewFormDauMucByIdDto>(dauMuc);
-            return result;
-        }
-
-        public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa( int idFormLoai,int idDanhBa)
+        /*public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa( int idFormLoai,int idDanhBa)
         {
             _logger.LogInformation($"{nameof(GetFormInforByIdDanhBa)}  idDanhBa={idDanhBa}, idFormLoai={idFormLoai}");
 
@@ -196,10 +124,6 @@ namespace syll.be.application.Form.Implements
             var formDanhBa = _syllDbContext.FormDanhBa.FirstOrDefault(x => x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
 
-            var dauMucs = _syllDbContext.FormDauMucs
-                .Where(x => x.IdFormLoai == idFormLoai && !x.Deleted)
-                .OrderBy(x => x.Id)
-                .ToList();
 
             var truongDatas = _syllDbContext.FormTruongDatas
                 .Where(x => x.IdFormLoai == idFormLoai && !x.Deleted)
@@ -327,7 +251,8 @@ namespace syll.be.application.Form.Implements
                 transaction.Rollback();
                 _logger.LogError(ex, $"Error in {nameof(UpdateFormData)}");
                 throw;
-            }
+            }*/
         }
+
     }
-}
+

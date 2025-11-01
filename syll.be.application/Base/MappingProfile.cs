@@ -23,7 +23,7 @@ namespace syll.be.application.Base
             CreateMap<domain.ToChuc.ToChuc, ViewToChucDto>();
             //CreateMap<domain.DanhBa.DanhBa, ViewDanhBaDto>();
             CreateMap<FormLoai, ViewFormLoaiDto>();
-            CreateMap<FormDauMuc, ViewFormDauMucDto>();
+            
             CreateMap<FormLoai, ViewFormDauMucDto>();
         } 
         }

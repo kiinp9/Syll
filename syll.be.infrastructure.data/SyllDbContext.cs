@@ -24,9 +24,14 @@ namespace syll.be.infrastructure.data
         public DbSet<DanhBa> DanhBas { get; set; }
         public DbSet<FormLoai> FormLoais { get; set; }
         public DbSet<FormData> FormDatas { get; set; }
-        public DbSet<FormDauMuc> FormDauMucs { get; set; }
         public DbSet<FormTruongData> FormTruongDatas { get; set; }
         public DbSet<FormDanhBa> FormDanhBa { get; set; }
+        public DbSet<Layout> Layouts { get; set; }
+        public DbSet<Block> Blocks { get; set; }
+        public DbSet<Row> Rows { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<Table> Tables { get; set; }
+        public DbSet<DropDown> DropDowns { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -55,17 +60,43 @@ namespace syll.be.infrastructure.data
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
-            modelBuilder.Entity<FormDauMuc>(entity =>
-            {
-                entity.Property(e => e.Deleted).HasDefaultValue(0);
-                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
-            });
+
             modelBuilder.Entity<FormTruongData>(entity =>
             {
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<FormDanhBa>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Block>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Layout>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Row>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Item>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Table>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<DropDown>(entity =>
             {
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");

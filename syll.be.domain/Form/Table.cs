@@ -12,26 +12,27 @@ using System.Xml.Linq;
 
 namespace syll.be.domain.Form
 {
-    [Table(nameof(FormDauMuc), Schema = DbSchemas.Core)]
+    [Table(nameof(Table), Schema = DbSchemas.Core)]
     [Index(
-    nameof(Id),
-    IsUnique = false,
-    Name = $"IX_{nameof(FormDauMuc)}"
+      nameof(Id),
+      IsUnique = false,
+      Name = $"IX_{nameof(Table)}"
     )]
-    public class FormDauMuc : ISoftDeleted
+    public class Table : ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int IdFormLoai { get; set; }
-        public string TenDauMuc { get; set; } = string.Empty;
-        public string SoDauMuc { get; set; } = string.Empty;
-        //public int Order { get; set; }
-        //public bool IsShow { get; set; }
+        public int IdTruongData { get; set; }
+        //order item trong bảng
+        public int Order { get; set; }
+        //% hiển thị trong item table
+        public int Ratio { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }
         public bool Deleted { get; set; }
         public string? DeletedBy { get; set; }
+
     }
 }

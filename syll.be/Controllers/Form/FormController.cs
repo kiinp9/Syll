@@ -112,87 +112,9 @@ namespace syll.be.Controllers.Form
         }
 
 
-        [Permission(PermissionKeys.FormAdd)]
-        [HttpPost("dau-muc")]
-        public ApiResponse CreateDauMuc([FromBody] CreateFormDauMucDto dto)
-        {
-            try
-            {
-                _formService.CreateFormDauMuc(dto);
-                return new();
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-        }
+       
 
-
-        [Permission(PermissionKeys.FormUpdate)]
-        [HttpPut("dau-muc")]
-        public ApiResponse UpdateDauMuc([FromBody] UpdateFormDauMucDto dto)
-        {
-            try
-            {
-                _formService.UpdateFormDauMuc(dto);
-                return new();
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-        }
-
-
-        [Permission(PermissionKeys.FormDelete)]
-        [HttpDelete("{idFormLoai}/dau-muc/{idFormDauMuc}")]
-        public ApiResponse DeleteDauMuc([FromRoute] int idFormDauMuc, [FromRoute] int idFormLoai)
-        {
-            try
-            {
-                _formService.DeleteFormDauMuc(idFormDauMuc, idFormLoai);
-                return new();
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-        }
-
-
-        [Permission(PermissionKeys.FormView)]
-        [HttpGet("{idFormLoai}/list-dau-muc")]
-        public ApiResponse GetFormDauMucByidFormLoai([FromRoute] int idFormLoai)
-        {
-            try
-            {
-                var result = _formService.GetFormDauMucByidFormLoai(idFormLoai);
-                return new(result);
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-
-        }
-
-
-        [Permission(PermissionKeys.FormView)]
-        [HttpGet("{idFormLoai}/dau-muc/{idFormDauMuc}/dau-muc-by-id")]
-        public ApiResponse GetFormDauMucById([FromRoute] int idFormDauMuc)
-        {
-            try
-            {
-                var result = _formService.GetFormDauMucById(idFormDauMuc);
-                return new(result);
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-        }
-
-        [Permission(PermissionKeys.FormView)]
+        /*[Permission(PermissionKeys.FormView)]
         [HttpGet("{idFormLoai}/danh-ba/{idDanhBa}/form-content")]
         public ApiResponse GetFormInforByIdDanhBa([FromRoute] int idFormLoai, [FromRoute] int idDanhBa)
         {
@@ -221,6 +143,6 @@ namespace syll.be.Controllers.Form
             {
                 return OkException(ex);
             }
-        }
+        }*/
     }
 }
