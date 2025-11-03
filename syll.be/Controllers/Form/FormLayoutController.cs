@@ -39,7 +39,7 @@ namespace syll.be.Controllers.Form
             }
         }
 
-        [Permission(PermissionKeys.FormView)]
+        //[Permission(PermissionKeys.FormView)]
         [HttpGet("{id}")]
         public async Task<ApiResponse> FindById([FromRoute] int id)
         {
