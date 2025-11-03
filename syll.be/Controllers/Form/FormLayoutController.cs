@@ -40,12 +40,12 @@ namespace syll.be.Controllers.Form
         }
 
         [Permission(PermissionKeys.FormView)]
-        [HttpGet("{id}/danh-ba/{idDanhBa}")]
-        public ApiResponse FindById([FromRoute] int id, [FromRoute] int  idDanhBa)
+        [HttpGet("{id}")]
+        public async Task<ApiResponse> FindById([FromRoute] int id)
         {
             try
             {
-                var data = _formLayoutService.FindLayoutById(id,  idDanhBa);
+                var data = await _formLayoutService.FindLayoutById(id);
                 return new(data);
             }
             catch (Exception ex)

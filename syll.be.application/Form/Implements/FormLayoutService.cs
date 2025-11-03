@@ -108,10 +108,10 @@ namespace syll.be.application.Form.Implements
             
         }
 
-        public ViewLayoutByIdDto FindLayoutById(int id,int idDanhBa)
+        public async Task<ViewLayoutByIdDto> FindLayoutById(int id)
         {
             _logger.LogInformation($"{nameof(FindLayoutById)} id = {id}");
-
+            var idDanhBa = await GetCurrentDanhBaId();
             var layout = _syllDbContext.Layouts
                 .FirstOrDefault(l => l.Id == id && !l.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorLayoutNotFound);

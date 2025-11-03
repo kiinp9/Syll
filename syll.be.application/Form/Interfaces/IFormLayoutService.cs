@@ -11,7 +11,7 @@ namespace syll.be.application.Form.Interfaces
     {
         public void CreateLayout(CreateLayoutDto dto);
         public Task UpdateLayOut(UpdateLayoutDto dto);
-        public ViewLayoutByIdDto FindLayoutById(int id, int idDanhBa);
+        public  Task<ViewLayoutByIdDto> FindLayoutById(int id);
         public void DeleteLayout(int idFormLoai, int idLayout);
         public void CreateBlock(CreateBlockDto dto);
         public  Task UpdateBlock(UpdateBlockDto dto);
