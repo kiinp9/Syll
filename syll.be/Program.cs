@@ -228,6 +228,8 @@ builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IToChucService, ToChucService>();
 builder.Services.AddScoped<IDanhBaService, DanhBaService>();
 builder.Services.AddScoped<IFormService, FormService>();
+builder.Services.AddScoped<IFormLayoutService, FormLayoutService>();
+builder.Services.AddScoped<IFormDataService, FormDataService>();
 
 #endregion
 

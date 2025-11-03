@@ -34,9 +34,18 @@ namespace syll.be.shared.HttpRequest.Error
         public const int DanhBaErrorNotFoundInToChuc = 402;
 
         public const int FormLoaiErrorNotFound = 501;
-        public const int FormDauMucErrorNotFound = 502;
+        public const int FormLoaiErrorLayoutNotFound = 502;
         public const int FormDanhBaErrorNotFound = 503;
         public const int FormTruongDataErrorNotFound = 504;
+        public const int FormLoaiErrorBlockNotFound = 505;
+        public const int FormLoaiErrorBlockOrderInvalid = 506;
+        public const int FormLoaiErrorRowNotFound = 507;
+        public const int FormLoaiErrorRowOrderInvalid = 508;
+        public const int FormLoaiErrorItemNotFound = 509;
+        public const int FormLoaiErrorItemOrderInvalid = 510;
+        public const int FormLoaiErrorItemTypeInvalid = 511;
+        public const int FormLoaiErrorLayoutOrderInvalid = 512;
+
     }
 
 }

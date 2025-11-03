@@ -28,9 +28,17 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.DanhBaErrorNotFound, "Danh bạ không tồn tại"},
             { ErrorCodes.DanhBaErrorNotFoundInToChuc, "Danh bạ không tồn tại trong tổ chức"},
             { ErrorCodes.FormLoaiErrorNotFound, "Loại form này không tồn tại"},
-            { ErrorCodes.FormDauMucErrorNotFound, "Đầu mục này trong form không tồn tại"},
             { ErrorCodes.FormDanhBaErrorNotFound, "Người dùng trong danh bạ không đăng kí Form này"},
             { ErrorCodes.FormTruongDataErrorNotFound,"Trường dữ liệu không tồn tại"},
+            { ErrorCodes.FormLoaiErrorLayoutNotFound, "Layout không tồn tại trong loại form này" },
+            { ErrorCodes.FormLoaiErrorBlockNotFound, "Block không tồn tại" },
+            { ErrorCodes.FormLoaiErrorBlockOrderInvalid,"Thứ tự của block không hợp lệ" },
+            { ErrorCodes.FormLoaiErrorRowNotFound,"Row không tồn tại" },
+            { ErrorCodes.FormLoaiErrorRowOrderInvalid,"Thứ tự của row không hợp lệ" },
+            { ErrorCodes.FormLoaiErrorItemNotFound, "Item không tồn tại" },
+            { ErrorCodes.FormLoaiErrorItemOrderInvalid,"Thứ tự item không hợp lệ" },
+            { ErrorCodes.FormLoaiErrorItemTypeInvalid,"Loại item không hợp lệ" },
+            { ErrorCodes.FormLoaiErrorLayoutOrderInvalid,"Thứ tự layout không hợp lệ" }
 
         };
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using syll.be.infrastructure.data;
 
@@ -11,9 +12,11 @@ using syll.be.infrastructure.data;
 namespace syll.be.infrastructure.data.Migrations
 {
     [DbContext(typeof(SyllDbContext))]
-    partial class SyllDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251102112146_Update_Form_Config_Fe")]
+    partial class Update_Form_Config_Fe
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -701,9 +704,6 @@ namespace syll.be.infrastructure.data.Migrations
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("IdFormLoai")
-                        .HasColumnType("int");
-
                     b.Property<int>("IdItem")
                         .HasColumnType("int");
 
@@ -755,8 +755,8 @@ namespace syll.be.infrastructure.data.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Ratio")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("Ratio")
+                        .HasColumnType("int");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");

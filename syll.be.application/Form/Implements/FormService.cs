@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NLog.LayoutRenderers.Wrappers;
 using syll.be.application.Base;
-using syll.be.application.Form.Dtos;
+using syll.be.application.Form.Dtos.Form;
 using syll.be.application.Form.Interfaces;
 using syll.be.infrastructure.data;
 using syll.be.shared.HttpRequest.AppException;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace syll.be.application.Form.Implements
 {
-    public class FormService :BaseService, IFormService 
+    public class FormService : BaseService, IFormService
     {
         public FormService(
             SyllDbContext syllDbContext,
@@ -30,7 +30,7 @@ namespace syll.be.application.Form.Implements
         {
         }
 
-        public void Create (CreateFormLoaiDto dto)
+        public void Create(CreateFormLoaiDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}  dto={JsonSerializer.Serialize(dto)}");
 
@@ -40,8 +40,8 @@ namespace syll.be.application.Form.Implements
             {
                 TenForm = dto.TenLoaiForm,
                 MoTa = dto.MoTa,
-                ThoiGianBatDau= dto.ThoiGianBatDau,
-                ThoiGianKetThuc= dto.ThoiGianKetThuc,
+                ThoiGianBatDau = dto.ThoiGianBatDau,
+                ThoiGianKetThuc = dto.ThoiGianKetThuc,
                 CreatedBy = currentUserId,
                 CreatedDate = vietNamNow,
                 Deleted = false
@@ -50,10 +50,10 @@ namespace syll.be.application.Form.Implements
             _syllDbContext.SaveChanges();
         }
 
-        public void Update (UpdateFormLoaiDto dto)
+        public void Update(UpdateFormLoaiDto dto)
         {
             _logger.LogInformation($"{nameof(Update)}  dto={JsonSerializer.Serialize(dto)}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == dto.Id && !f.Deleted )
+            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == dto.Id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
             var vietNamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
@@ -66,7 +66,7 @@ namespace syll.be.application.Form.Implements
 
         }
 
-        public BaseResponsePagingDto<ViewFormLoaiDto> Find (FindPagingFormLoaiDto dto)
+        public BaseResponsePagingDto<ViewFormLoaiDto> Find(FindPagingFormLoaiDto dto)
         {
             _logger.LogInformation($"{nameof(Find)}  dto={JsonSerializer.Serialize(dto)}");
             var query = from fl in _syllDbContext.FormLoais
@@ -82,10 +82,10 @@ namespace syll.be.application.Form.Implements
             };
         }
 
-        public ViewFormLoaiDto GetFormLoaiById (int id)
+        public ViewFormLoaiDto GetFormLoaiById(int id)
         {
             _logger.LogInformation($"{nameof(GetFormLoaiById)}  id={id}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted )
+            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
             return new ViewFormLoaiDto
             {
@@ -97,10 +97,10 @@ namespace syll.be.application.Form.Implements
             };
         }
 
-        public void Delete (int id)
+        public void Delete(int id)
         {
             _logger.LogInformation($"{nameof(Delete)}  id={id}");
-            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted )
+            var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
             var vietNamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
@@ -111,7 +111,7 @@ namespace syll.be.application.Form.Implements
             _syllDbContext.SaveChanges();
         }
 
-      
+
 
         /*public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa( int idFormLoai,int idDanhBa)
         {
@@ -160,34 +160,23 @@ namespace syll.be.application.Form.Implements
             };
 
             return result;
-        }
+        }*/
 
 
         public void UpdateFormData(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateFormData)}  dto={JsonSerializer.Serialize(dto)}");
-
             using var transaction = _syllDbContext.Database.BeginTransaction();
             try
             {
                 var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
                     ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
-
                 var danhBa = _syllDbContext.DanhBas.FirstOrDefault(x => x.Id == idDanhBa && !x.Deleted)
                     ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
-
                 var formDanhBa = _syllDbContext.FormDanhBa.FirstOrDefault(x => x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
                     ?? throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
 
-                var allIdDauMucs = dto.DauMucs.Select(x => x.IdDauMuc).Distinct().ToList();
-                var allIdTruongs = dto.DauMucs.SelectMany(x => x.TruongDatas.Select(t => t.IdTruong)).Distinct().ToList();
-
-                var dauMucs = _syllDbContext.FormDauMucs
-                    .Where(x => allIdDauMucs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
-                    .ToDictionary(x => x.Id);
-
-                if (dauMucs.Count != allIdDauMucs.Count)
-                    throw new UserFriendlyException(ErrorCodes.FormDauMucErrorNotFound);
+                var allIdTruongs = dto.TruongDatas.Select(t => t.IdTruong).Distinct().ToList();
 
                 var truongDatas = _syllDbContext.FormTruongDatas
                     .Where(x => allIdTruongs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
@@ -196,21 +185,6 @@ namespace syll.be.application.Form.Implements
                 if (truongDatas.Count != allIdTruongs.Count)
                     throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
 
-                foreach (var dauMucDto in dto.DauMucs)
-                {
-                    if (!dauMucs.ContainsKey(dauMucDto.IdDauMuc))
-                        throw new UserFriendlyException(ErrorCodes.FormDauMucErrorNotFound);
-
-                    foreach (var truongDataDto in dauMucDto.TruongDatas)
-                    {
-                        if (!truongDatas.TryGetValue(truongDataDto.IdTruong, out var truongData))
-                            throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
-
-                        if (truongData.IdDauMuc != dauMucDto.IdDauMuc)
-                            throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
-                    }
-                }
-
                 var existingFormDatas = _syllDbContext.FormDatas
                     .Where(x => allIdTruongs.Contains(x.IdTruongData) && x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
                     .ToDictionary(x => x.IdTruongData);
@@ -218,28 +192,25 @@ namespace syll.be.application.Form.Implements
                 var vietNamNow = GetVietnamTime();
                 var currentUserId = getCurrentUserId();
 
-                foreach (var dauMucDto in dto.DauMucs)
+                foreach (var truongDataDto in dto.TruongDatas)
                 {
-                    foreach (var truongDataDto in dauMucDto.TruongDatas)
+                    if (existingFormDatas.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
                     {
-                        if (existingFormDatas.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
+                        existingFormData.Data = truongDataDto.Data;
+                    }
+                    else
+                    {
+                        var newFormData = new domain.Form.FormData
                         {
-                            existingFormData.Data = truongDataDto.Data;
-                        }
-                        else
-                        {
-                            var newFormData = new domain.Form.FormData
-                            {
-                                IdFormLoai = idFormLoai,
-                                IdTruongData = truongDataDto.IdTruong,
-                                IdDanhBa = idDanhBa,
-                                Data = truongDataDto.Data,
-                                CreatedBy = currentUserId,
-                                CreatedDate = vietNamNow,
-                                Deleted = false
-                            };
-                            _syllDbContext.FormDatas.Add(newFormData);
-                        }
+                            IdFormLoai = idFormLoai,
+                            IdTruongData = truongDataDto.IdTruong,
+                            IdDanhBa = idDanhBa,
+                            Data = truongDataDto.Data,
+                            CreatedBy = currentUserId,
+                            CreatedDate = vietNamNow,
+                            Deleted = false
+                        };
+                        _syllDbContext.FormDatas.Add(newFormData);
                     }
                 }
 
@@ -251,8 +222,9 @@ namespace syll.be.application.Form.Implements
                 transaction.Rollback();
                 _logger.LogError(ex, $"Error in {nameof(UpdateFormData)}");
                 throw;
-            }*/
+            }
         }
+    }
 
     }
 

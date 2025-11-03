@@ -13,5 +13,6 @@ namespace syll.be.shared.Constants.Form
         public const int DropDownDate = 3;
         public const int CheckBox = 4;
         public const int Table = 5;
+        public const int ItemText = 6;
     }
 }

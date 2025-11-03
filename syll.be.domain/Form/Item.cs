@@ -28,7 +28,7 @@ namespace syll.be.domain.Form
         // Order Item trong Row
         public int Order { get; set; }
         // phần trăm hiển thị của item trong row
-        public int Ratio { get; set; }
+        public decimal Ratio { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

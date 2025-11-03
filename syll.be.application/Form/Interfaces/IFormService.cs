@@ -1,4 +1,4 @@
-﻿using syll.be.application.Form.Dtos;
+﻿using syll.be.application.Form.Dtos.Form;
 using syll.be.shared.HttpRequest.BaseRequest;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace syll.be.application.Form.Interfaces
         public void Delete(int id);
     
         //public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa(int idFormLoai,int idDanhBa);
-        //public void UpdateFormData(int idFormLoai, int idDanhBa,UpdateFormDataRequestDto dto);
+        public void UpdateFormData(int idFormLoai, int idDanhBa,UpdateFormDataRequestDto dto);
 
     }
 }

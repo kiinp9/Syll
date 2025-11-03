@@ -25,6 +25,8 @@ namespace syll.be.domain.Form
         public int Id { get; set; }
         public int IdFormLoai { get; set; }
         public string Ten { get;set; } = string.Empty;
+        public int Order {  get; set; }
+        //public bool IsShow { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

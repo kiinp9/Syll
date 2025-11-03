@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace syll.be.application.Form.Dtos
+namespace syll.be.application.Form.Dtos.Form
 {
-    public class ViewFormLoaiDto
+    public class UpdateFormLoaiDto
     {
         public int Id { get; set; }
-        public string TenForm { get; set; } = string.Empty;
+        public string Ten { get; set; } = string.Empty;
         public string MoTa { get; set; } = string.Empty;
         public DateTime? ThoiGianBatDau { get; set; }
         public DateTime? ThoiGianKetThuc { get; set; }

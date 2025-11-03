@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using syll.be.application.DanhBa.Interfaces;
-using syll.be.application.Form.Dtos;
+using syll.be.application.Form.Dtos.Form;
 using syll.be.application.Form.Interfaces;
 using syll.be.Attributes;
 using syll.be.Controllers.Base;
@@ -127,7 +127,7 @@ namespace syll.be.Controllers.Form
             {
                 return OkException(ex);
             }
-        }
+        }*/
 
 
         [Permission(PermissionKeys.FormUpdate)]
@@ -143,6 +143,6 @@ namespace syll.be.Controllers.Form
             {
                 return OkException(ex);
             }
-        }*/
+        }
     }
 }

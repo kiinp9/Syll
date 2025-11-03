@@ -24,6 +24,7 @@ namespace syll.be.domain.Form
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int IdLayout { get; set; }
+        //public string Ten {  get; set; } = String.Empty;
         public int Order { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }

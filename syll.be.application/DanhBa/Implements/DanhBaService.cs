@@ -446,9 +446,41 @@ namespace syll.be.application.DanhBa.Implements
                 }
             }
 
+            
+
             if (toChucDanhBasToInsert.Count > 0)
             {
                 await _syllDbContext.BulkInsertAsync(toChucDanhBasToInsert);
+            }
+            var existingFormDanhBas = await _syllDbContext.FormDanhBa
+        .Where(fdb => fdb.IdFormLoai == 1 && !fdb.Deleted)
+        .ToListAsync();
+
+            var existingFormDanhBaKeys = existingFormDanhBas
+                .Select(fdb => fdb.IdDanhBa)
+                .ToHashSet();
+
+            var formDanhBasToInsert = new List<domain.FormDanhBa.FormDanhBa>();
+
+            foreach (var idDanhBa in emailToIdDanhBaMap.Values)
+            {
+                if (!existingFormDanhBaKeys.Contains(idDanhBa))
+                {
+                    var newFormDanhBa = new domain.FormDanhBa.FormDanhBa
+                    {
+                        IdFormLoai = 1,
+                        IdDanhBa = idDanhBa,
+                        CreatedBy = currentUserId,
+                        CreatedDate = vietnamTime,
+                        Deleted = false
+                    };
+                    formDanhBasToInsert.Add(newFormDanhBa);
+                }
+            }
+
+            if (formDanhBasToInsert.Count > 0)
+            {
+                await _syllDbContext.BulkInsertAsync(formDanhBasToInsert);
             }
 
             var endTime = DateTime.UtcNow;

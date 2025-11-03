@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace syll.be.application.Form.Dtos
+namespace syll.be.application.Form.Dtos.Form
 {
     public class GetFormInforByIdDanhBaDto
     {
         public int Id { get; set; }
-        public string TenFormLoai { get; set; } = String.Empty;
+        public string TenFormLoai { get; set; } = string.Empty;
         public string MoTa { get; set; } = string.Empty;
         public DateTime? ThoiGianBatDau { get; set; } 
         public DateTime? ThoiGianKetThuc {  get; set; }
@@ -19,13 +19,13 @@ namespace syll.be.application.Form.Dtos
     public class GetFormTruongDataDto
     {
         public int Id { get; set; }
-        public string TenTruong { get; set; } = String.Empty;
+        public string TenTruong { get; set; } = string.Empty;
         public GetFormDataDto Item { get; set; } = new GetFormDataDto(); 
     }
     public class GetFormDauMucDto 
     { 
         public int Id { get; set; }
-        public string TenDauMuc { get; set; } = String.Empty ;
+        public string TenDauMuc { get; set; } = string.Empty ;
         public List<GetFormTruongDataDto> Items { get; set; } = new List<GetFormTruongDataDto>();
     }
 

@@ -42,6 +42,7 @@ namespace syll.be.shared.Constants.Auth
         public const string FormUpdate = Function + "FormUpdate";
         public const string FormDelete = Function + "FormDelete";
         public const string FormView = Function + "FormView";
+        public const string FormImport = Function + "FormImport";
 
         public static readonly (string Key, string Name, string Category)[] All =
         {

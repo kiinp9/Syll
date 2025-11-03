@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace syll.be.application.Form.Dtos
+namespace syll.be.application.Form.Dtos.Form
 {
     public class CreateFormLoaiDto
     {
-        public string TenLoaiForm { get; set; } = String.Empty;
-        public string MoTa { get; set; } = String.Empty;
+        public string TenLoaiForm { get; set; } = string.Empty;
+        public string MoTa { get; set; } = string.Empty;
         public DateTime? ThoiGianBatDau { get; set; }
         public DateTime? ThoiGianKetThuc { get; set; }
     }
