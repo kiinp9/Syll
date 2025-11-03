@@ -21,6 +21,7 @@ namespace syll.be.application.Base
         public readonly IHttpContextAccessor _httpContextAccessor;
         private static readonly TimeZoneInfo VietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
         protected readonly IMapper _mapper;
+
         public BaseService(
             SyllDbContext syllDbContext,
             ILogger<BaseService> logger,
@@ -33,6 +34,7 @@ namespace syll.be.application.Base
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
+
         protected string getCurrentUserId()
         {
             var data = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -43,17 +45,38 @@ namespace syll.be.application.Base
             //_logger.LogInformation($"getCurrentUserId: {data}");
             return data!;
         }
+
         protected string getCurrentName()
         {
             var data = _httpContextAccessor.HttpContext?.User.FindFirstValue(Claims.Name);
             return data!;
         }
+
         protected bool IsSuperAdmin()
         {
             var roles = _httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).ToList();
             var isSuperAdmin = roles?.Any(r => r.Value == RoleConstants.ROLE_SUPER_ADMIN) ?? false;
             return isSuperAdmin;
         }
+
+        protected async Task<int?> GetCurrentDanhBaId()
+        {
+            var username = _httpContextAccessor.HttpContext?.User.FindFirstValue(Claims.Username);
+
+            if (string.IsNullOrEmpty(username))
+            {
+                return null;
+            }
+
+            var danhBa = await _syllDbContext.Set<domain.DanhBa.DanhBa>()
+                .AsNoTracking()
+                .Where(x => x.Email == username && !x.Deleted)
+                .Select(x => x.Id)
+                .FirstOrDefaultAsync();
+
+            return danhBa == 0 ? null : danhBa;
+        }
+
         protected static DateTime GetVietnamTime()
         {
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, VietnamTimeZone);

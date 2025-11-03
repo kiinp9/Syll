@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NLog.LayoutRenderers.Wrappers;
 using syll.be.application.Base;
@@ -163,10 +164,68 @@ namespace syll.be.application.Form.Implements
         }*/
 
 
-        public void UpdateFormData(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto)
+        public async Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto)
         {
-            _logger.LogInformation($"{nameof(UpdateFormData)}  dto={JsonSerializer.Serialize(dto)}");
+            _logger.LogInformation($"{nameof(UpdateFormData)}" );
             using var transaction = _syllDbContext.Database.BeginTransaction();
+            var idDanhBa = await GetCurrentDanhBaId();
+            try
+            {
+                var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
+                    ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+                if (idDanhBa.HasValue)
+                {
+                    var danhBa = _syllDbContext.DanhBas.FirstOrDefault(x => x.Id == idDanhBa.Value && !x.Deleted)
+                        ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
+                }
+                if (idDanhBa.HasValue)
+                {
+                    var formDanhBa = _syllDbContext.FormDanhBa.FirstOrDefault(x => x.IdDanhBa == idDanhBa.Value && x.IdFormLoai == idFormLoai && !x.Deleted)
+                        ?? throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
+                }
+                var allIdTruongs = dto.TruongDatas.Select(t => t.IdTruong).Distinct().ToList();
+                var truongDatas = _syllDbContext.FormTruongDatas
+                    .Where(x => allIdTruongs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
+                    .ToDictionary(x => x.Id);
+                if (truongDatas.Count != allIdTruongs.Count)
+                    throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
+                var existingFormDatas = _syllDbContext.FormDatas
+                    .Where(x => allIdTruongs.Contains(x.IdTruongData)
+                        && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                        && x.IdFormLoai == idFormLoai
+                        && !x.Deleted)
+                    .ToList();
+                var existingFormDataDict = existingFormDatas.ToDictionary(x => x.IdTruongData);
+                var vietNamNow = GetVietnamTime();
+                var currentUserId = getCurrentUserId();
+                foreach (var truongDataDto in dto.TruongDatas)
+                {
+                    if (existingFormDataDict.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
+                    {
+                        bool isDataChanged = existingFormData.Data != truongDataDto.Data;
+                        if (isDataChanged)
+                        {
+                            existingFormData.Data = truongDataDto.Data;
+                            _syllDbContext.Entry(existingFormData).State = EntityState.Modified;
+                        }
+                    }
+                }
+                _syllDbContext.SaveChanges();
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogError(ex, $"Error in {nameof(UpdateFormData)}");
+                throw;
+            }
+        }
+
+        public void UpdateFormDataForAdmin(int idFormLoai,int idDanhBa, UpdateFormDataRequestDto dto)
+        {
+            _logger.LogInformation($"{nameof(UpdateFormDataForAdmin)}  dto={JsonSerializer.Serialize(dto)}");
+            using var transaction = _syllDbContext.Database.BeginTransaction();
+            //var idDanhBa = GetCurrentDanhBaId();
             try
             {
                 var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
@@ -175,23 +234,17 @@ namespace syll.be.application.Form.Implements
                     ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
                 var formDanhBa = _syllDbContext.FormDanhBa.FirstOrDefault(x => x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
                     ?? throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
-
                 var allIdTruongs = dto.TruongDatas.Select(t => t.IdTruong).Distinct().ToList();
-
                 var truongDatas = _syllDbContext.FormTruongDatas
                     .Where(x => allIdTruongs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
                     .ToDictionary(x => x.Id);
-
                 if (truongDatas.Count != allIdTruongs.Count)
                     throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
-
                 var existingFormDatas = _syllDbContext.FormDatas
                     .Where(x => allIdTruongs.Contains(x.IdTruongData) && x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
                     .ToDictionary(x => x.IdTruongData);
-
                 var vietNamNow = GetVietnamTime();
                 var currentUserId = getCurrentUserId();
-
                 foreach (var truongDataDto in dto.TruongDatas)
                 {
                     if (existingFormDatas.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
@@ -213,7 +266,6 @@ namespace syll.be.application.Form.Implements
                         _syllDbContext.FormDatas.Add(newFormData);
                     }
                 }
-
                 _syllDbContext.SaveChanges();
                 transaction.Commit();
             }
@@ -224,7 +276,8 @@ namespace syll.be.application.Form.Implements
                 throw;
             }
         }
-    }
 
     }
+
+}
 

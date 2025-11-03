@@ -363,7 +363,11 @@ namespace syll.be.Controllers.Auth
         }
 
         [HttpGet("~/external-callback")]
-        public async Task<IActionResult> ExternalCallback([FromServices] UserManager<AppUser> userManager, string? returnUrl = "/", string? remoteError = null)
+        public async Task<IActionResult> ExternalCallback(
+            [FromServices] UserManager<AppUser> userManager,
+            [FromServices] DbContext dbContext,
+            string? returnUrl = "/",
+            string? remoteError = null)
         {
             _logger.LogInformation("External callback received. Return URL: {ReturnUrl}", returnUrl);
 
@@ -387,7 +391,19 @@ namespace syll.be.Controllers.Auth
 
             _logger.LogInformation("External authentication successful for email: {Email}", email);
 
-            //var user = await _usersService.FindByMsAccount(email!);
+            // Kiểm tra email có tồn tại trong bảng DanhBa không
+            var danhBaExists = await dbContext.Set<syll.be.domain.DanhBa.DanhBa>()
+                .AsNoTracking()
+                .AnyAsync(x => x.Email == email && !x.Deleted);
+
+            if (!danhBaExists)
+            {
+                _logger.LogWarning("Email {Email} not found in DanhBa or has been deleted", email);
+                return Unauthorized(new { error = "Email không có trong danh bạ hoặc đã bị xóa" });
+            }
+
+            _logger.LogInformation("Email {Email} found in DanhBa, proceeding with authentication", email);
+
             var user = userManager.Users.AsNoTracking().FirstOrDefault(x => x.Email == email);
 
             if (user == null)

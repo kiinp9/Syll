@@ -15,9 +15,10 @@ namespace syll.be.application.Form.Interfaces
         public BaseResponsePagingDto<ViewFormLoaiDto> Find(FindPagingFormLoaiDto dto);
         public ViewFormLoaiDto GetFormLoaiById(int id);
         public void Delete(int id);
-    
+
         //public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa(int idFormLoai,int idDanhBa);
-        public void UpdateFormData(int idFormLoai, int idDanhBa,UpdateFormDataRequestDto dto);
+        public Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto);
+        public void UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto);
 
     }
 }

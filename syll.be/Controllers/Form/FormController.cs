@@ -112,7 +112,7 @@ namespace syll.be.Controllers.Form
         }
 
 
-       
+
 
         /*[Permission(PermissionKeys.FormView)]
         [HttpGet("{idFormLoai}/danh-ba/{idDanhBa}/form-content")]
@@ -130,13 +130,28 @@ namespace syll.be.Controllers.Form
         }*/
 
 
-        [Permission(PermissionKeys.FormUpdate)]
-        [HttpPut("{idFormLoai}/danh-ba/{idDanhBa}/form-content")]
-        public ApiResponse UpdateFormData([FromRoute] int idFormLoai, [FromRoute] int idDanhBa, [FromBody] UpdateFormDataRequestDto dto)
+     
+        [HttpPut("{idFormLoai}/form-content")]
+        public async Task<ApiResponse> UpdateFormData([FromRoute] int idFormLoai, [FromBody] UpdateFormDataRequestDto dto)
         {
             try
             {
-                _formService.UpdateFormData(idFormLoai, idDanhBa, dto);
+                await _formService.UpdateFormData(idFormLoai, dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [Permission(PermissionKeys.FormUpdate)]
+        [HttpPut("{idFormLoai}/danha-ba/{idDanhBa}/form-content-admin")]
+        public ApiResponse UpdateFormDataForAdmin([FromRoute] int idFormLoai,[FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
+        {
+            try
+            {
+                _formService.UpdateFormDataForAdmin(idFormLoai,idDanhBa, dto);
                 return new();
             }
             catch (Exception ex)
