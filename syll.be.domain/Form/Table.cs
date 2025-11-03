@@ -28,6 +28,8 @@ namespace syll.be.domain.Form
         public int Order { get; set; }
         //% hiển thị trong item table
         public int Ratio { get; set; }
+        public string Class { get; set; } = string.Empty;
+        public string Style { get; set; } = string.Empty;
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

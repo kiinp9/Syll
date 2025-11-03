@@ -143,19 +143,27 @@ namespace syll.be.application.Form.Implements
                 IdFormLoai = layout.IdFormLoai,
                 Ten = layout.Ten,
                 Order = layout.Order,
+                Class = layout.Class,
+                Style = layout.Style,
                 Items = blocks.Select(b => new GetBlockDto
                 {
                     Id = b.Id,
                     Order = b.Order,
+                    Class = b.Class,
+                    Style = b.Style,
                     Items = rows.Where(r => r.IdBlock == b.Id).Select(r => new GetRowDto
                     {
                         Id = r.Id,
                         Order = r.Order,
+                        Style = r.Style,
+                        Class = r.Class,
                         Items = items.Where(i => i.IdRow == r.Id).Select(i => new GetItemDto
                         {
                             Id = i.Id,
                             Order = i.Order,
                             Type = i.Type,
+                            Style = i.Style,
+                            Class = i.Class,
                             Ratio = i.Ratio,
                             Items = formTruongDatas.Where(f => f.IdItem == i.Id).Select(f =>
                             {

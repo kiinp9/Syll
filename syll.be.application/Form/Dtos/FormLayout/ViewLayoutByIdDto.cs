@@ -12,6 +12,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Id { get; set; }
         public int IdFormLoai { get; set; }
         public string Ten { get; set; } = String.Empty;
+        public string Style { get; set; } = String.Empty;
+        public string Class { get; set; } = String.Empty;
         public int Order { get; set; }
 
         public List<GetBlockDto> Items { get; set; } = new List<GetBlockDto>();
@@ -21,6 +23,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
     {
         public int Id { get; set; }
         public int Order { get; set; }
+        public string Style { get; set; } = String.Empty;
+        public string Class { get; set; } = String.Empty;
         public List<GetRowDto> Items { get; set; } = new List<GetRowDto>();
     }
 
@@ -28,6 +32,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
     {
         public int Id { get; set; }
         public int Order { get; set; }
+        public string Style { get; set; } = String.Empty;
+        public string Class { get; set; } = String.Empty;
         public List<GetItemDto> Items { get; set; } = new List<GetItemDto>();
     }
 
@@ -36,6 +42,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Id { get; set; }
         public int Order { get; set; }
         public int Type { get; set; }
+        public string Style { get; set; } = String.Empty;
+        public string Class { get; set; } = String.Empty;
         public decimal Ratio { get; set; }
         public List<GetFormTruongData> Items { get; set; } = new List<GetFormTruongData>();    
     }
