@@ -24,6 +24,7 @@ namespace syll.be.domain.Form
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int IdRow { get; set; }
+        public string InputName { get; set; } = String.Empty;
         public int Type { get; set; } 
         // Order Item trong Row
         public int Order { get; set; }

@@ -137,6 +137,10 @@ namespace syll.be.application.Form.Implements
             var formDatas = _syllDbContext.FormDatas
                 .Where(fd => truongDataIds.Contains(fd.IdTruongData) && fd.IdDanhBa == idDanhBa && !fd.Deleted)
                 .ToList();
+            var dropDowns = _syllDbContext.DropDowns
+                .Where(dd => truongDataIds.Contains(dd.IdTruongData) && !dd.Deleted)
+                .OrderBy(dd => dd.Order)
+                .ToList();
             var result = new ViewLayoutByIdDto
             {
                 Id = layout.Id,
@@ -160,6 +164,7 @@ namespace syll.be.application.Form.Implements
                         Items = items.Where(i => i.IdRow == r.Id).Select(i => new GetItemDto
                         {
                             Id = i.Id,
+                            InputName = i.InputName,
                             Order = i.Order,
                             Type = i.Type,
                             Style = i.Style,
@@ -178,7 +183,17 @@ namespace syll.be.application.Form.Implements
                                         Id = fd.Id,
                                         Data = fd.Data,
                                         IndexRowTable = fd.IndexRowTable
-                                    } : new GetFormData()
+                                    } : new GetFormData(),
+                                    Items = i.Type == ItemConstants.DropDownText
+                                        ? dropDowns.Where(dd => dd.IdTruongData == f.Id).Select(dd => new GetDropDownData
+                                        {
+                                            Id = dd.Id,
+                                            Data = dd.Data,
+                                            Order = dd.Order,
+                                            Class = dd.Class,
+                                            Style = dd.Style
+                                        }).ToList()
+                                        : new List<GetDropDownData?>()
                                 };
                             }).ToList()
                         }).ToList()

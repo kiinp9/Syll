@@ -40,6 +40,7 @@ namespace syll.be.application.Form.Dtos.FormLayout
     public class GetItemDto
     {
         public int Id { get; set; }
+        public string InputName { get; set; } = String.Empty;
         public int Order { get; set; }
         public int Type { get; set; }
         public string Style { get; set; } = String.Empty;
@@ -55,6 +56,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public string Type { get; set; } = String.Empty;
         public GetFormData Item { get; set; } = new GetFormData();
 
+        public List<GetDropDownData?> Items { get; set; } = new List<GetDropDownData?>();
+
     }
 
     public class GetFormData
@@ -62,5 +65,15 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Id { get; set; }
         public string Data { get; set; } = String.Empty;
         public int? IndexRowTable { get; set; }
+    }
+
+
+    public class GetDropDownData
+    {
+        public int Id { get; set; }
+        public string Data { get; set; } = String.Empty;
+        public int Order { get; set; }
+        public string Class { get;set; } = String.Empty;
+        public string Style { get; set; } = String.Empty;
     }
 }
