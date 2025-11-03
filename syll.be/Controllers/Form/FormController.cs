@@ -159,5 +159,20 @@ namespace syll.be.Controllers.Form
                 return OkException(ex);
             }
         }
+
+
+        [HttpGet("truong-data/{idTruongData}")]
+        public ApiResponse UpdateFormDataForAdmin([FromRoute] int idTruongData)
+        {
+            try
+            {
+                var data =_formService.GetDropDownData(idTruongData);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
     }
 }

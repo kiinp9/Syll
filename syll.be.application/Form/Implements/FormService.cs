@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using syll.be.application.Base;
 using syll.be.application.Form.Dtos.Form;
 using syll.be.application.Form.Interfaces;
 using syll.be.infrastructure.data;
+using syll.be.shared.Constants.Form;
 using syll.be.shared.HttpRequest.AppException;
 using syll.be.shared.HttpRequest.BaseRequest;
 using syll.be.shared.HttpRequest.Error;
@@ -112,7 +114,40 @@ namespace syll.be.application.Form.Implements
             _syllDbContext.SaveChanges();
         }
 
+        public List<GetDropDownDataResponseDto?> GetDropDownData (int idTruongData)
+        {
+            _logger.LogInformation($"{nameof(GetDropDownData)}  idTruongData={idTruongData}");
 
+            var truongData = _syllDbContext.FormTruongDatas.FirstOrDefault(x => x.Id == idTruongData && !x.Deleted);
+            if (truongData == null)
+            {
+                return null;
+            }
+
+            var item = _syllDbContext.Items.FirstOrDefault(x => x.Id == truongData.IdItem && !x.Deleted);
+            if (item == null)
+            {
+                return null;
+            }
+            if (item.Type == ItemConstants.DropDownText)
+            {
+                var dropDownData = (from dd in _syllDbContext.DropDowns
+                                    where dd.IdTruongData == idTruongData
+                                    && !dd.Deleted
+                                    orderby dd.Order
+                                    select new GetDropDownDataResponseDto
+                                    {
+                                        Id = dd.Id,
+                                        Data = dd.Data,
+                                        Order = dd.Order,
+                                    }).ToList();
+                return dropDownData;
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         /*public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa( int idFormLoai,int idDanhBa)
         {
@@ -169,6 +204,7 @@ namespace syll.be.application.Form.Implements
             _logger.LogInformation($"{nameof(UpdateFormData)}" );
             using var transaction = _syllDbContext.Database.BeginTransaction();
             var idDanhBa = await GetCurrentDanhBaId();
+
             try
             {
                 var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
@@ -206,6 +242,8 @@ namespace syll.be.application.Form.Implements
                         if (isDataChanged)
                         {
                             existingFormData.Data = truongDataDto.Data;
+                            existingFormData.UpdatedDate = vietNamNow;
+                            existingFormData.UpdatedBy = currentUserId;
                             _syllDbContext.Entry(existingFormData).State = EntityState.Modified;
                         }
                     }
