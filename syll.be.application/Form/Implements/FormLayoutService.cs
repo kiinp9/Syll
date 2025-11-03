@@ -115,34 +115,28 @@ namespace syll.be.application.Form.Implements
             var layout = _syllDbContext.Layouts
                 .FirstOrDefault(l => l.Id == id && !l.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorLayoutNotFound);
-
             var blocks = _syllDbContext.Blocks
                 .Where(b => b.IdLayout == id && !b.Deleted)
                 .OrderBy(b => b.Order)
                 .ToList();
-
             var blockIds = blocks.Select(b => b.Id).ToList();
             var rows = _syllDbContext.Rows
                 .Where(r => blockIds.Contains(r.IdBlock) && !r.Deleted)
                 .OrderBy(r => r.Order)
                 .ToList();
-
             var rowIds = rows.Select(r => r.Id).ToList();
             var items = _syllDbContext.Items
                 .Where(i => rowIds.Contains(i.IdRow) && !i.Deleted)
                 .OrderBy(i => i.Order)
                 .ToList();
-
             var itemIds = items.Select(i => i.Id).ToList();
             var formTruongDatas = _syllDbContext.FormTruongDatas
                 .Where(f => itemIds.Contains(f.IdItem) && !f.Deleted)
                 .ToList();
-
             var truongDataIds = formTruongDatas.Select(f => f.Id).ToList();
             var formDatas = _syllDbContext.FormDatas
                 .Where(fd => truongDataIds.Contains(fd.IdTruongData) && fd.IdDanhBa == idDanhBa && !fd.Deleted)
                 .ToList();
-
             var result = new ViewLayoutByIdDto
             {
                 Id = layout.Id,
@@ -163,23 +157,26 @@ namespace syll.be.application.Form.Implements
                             Order = i.Order,
                             Type = i.Type,
                             Ratio = i.Ratio,
-                            Items = formTruongDatas.Where(f => f.IdItem == i.Id).Select(f => new GetFormTruongData
+                            Items = formTruongDatas.Where(f => f.IdItem == i.Id).Select(f =>
                             {
-                                Id = f.Id,
-                                TenTruong = f.TenTruong,
-                                Type = f.Type,
-                                Items = formDatas.Where(fd => fd.IdTruongData == f.Id).Select(fd => new GetFormData
+                                var fd = formDatas.FirstOrDefault(fd => fd.IdTruongData == f.Id);
+                                return new GetFormTruongData
                                 {
-                                    Id = fd.Id,
-                                    Data = fd.Data,
-                                    IndexRowTable = fd.IndexRowTable
-                                }).ToList()
+                                    Id = f.Id,
+                                    TenTruong = f.TenTruong,
+                                    Type = f.Type,
+                                    Item = fd != null ? new GetFormData
+                                    {
+                                        Id = fd.Id,
+                                        Data = fd.Data,
+                                        IndexRowTable = fd.IndexRowTable
+                                    } : new GetFormData()
+                                };
                             }).ToList()
                         }).ToList()
                     }).ToList()
                 }).ToList()
             };
-
             return result;
         }
 

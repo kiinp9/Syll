@@ -45,7 +45,7 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Id { get; set; }
         public string TenTruong { get; set; } = String.Empty;
         public string Type { get; set; } = String.Empty;
-        public List<GetFormData> Items { get; set; } = new List<GetFormData>();
+        public GetFormData Item { get; set; } = new GetFormData();
 
     }
 
