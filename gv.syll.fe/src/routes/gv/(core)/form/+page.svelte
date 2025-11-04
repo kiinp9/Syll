@@ -15,7 +15,7 @@
 				<div class="mb-2 flex flex-row space-x-2">
 					{#each row.items as item (item.id)}
 						<div class="flex flex-col">
-							{#if item.items}
+							{#if item.items && item.items[0]}
 								{#if item.type === FormItemsTypes.ItemText}
 									{item.items[0].tenTruong}
 								{:else if item.type === FormItemsTypes.InputText}
