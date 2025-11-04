@@ -2,6 +2,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { FormItemsTypes } from '$lib/constants/form.constants.js';
+	import * as Select from '$lib/components/ui/select/index.js';
 
 	let { data } = $props();
 </script>
@@ -28,6 +29,20 @@
 											required
 											value={item.items[0].item.data}
 										/>
+									</div>
+								{:else if item.type === FormItemsTypes.DropDownText}
+									<div class="">
+										<Label for="username">{item.items[0].tenTruong}</Label>
+										<Select.Root type="single" bind:value={item.items[0].item.data} name="username">
+											<Select.Trigger>
+												{ item.items[0].item.data || 'Select a verified email to display'}
+											</Select.Trigger>
+											<Select.Content>
+												{#each item.items[0].items as option (option.id)}
+													<Select.Item value={option.data} label={option.data} />
+												{/each}
+											</Select.Content>
+										</Select.Root>
 									</div>
 								{:else}
 									{item.items[0].tenTruong}
