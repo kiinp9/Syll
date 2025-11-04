@@ -25,6 +25,7 @@ namespace syll.be.application.Form.Interfaces
         public void CreateItem(CreateItemDto dto);
         public  Task UpdateItem(UpdateItemDto dto);
         public void DeleteItem(int idRow, int id);
+        public void CreateDropDownData(CreateDropDownDataDto dto);
 
 
 

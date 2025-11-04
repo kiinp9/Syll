@@ -45,6 +45,7 @@ namespace syll.be.shared.HttpRequest.Error
         public const int FormLoaiErrorItemOrderInvalid = 510;
         public const int FormLoaiErrorItemTypeInvalid = 511;
         public const int FormLoaiErrorLayoutOrderInvalid = 512;
+        public const int FormLoaiErrorTruongDataNotFound = 513;
 
     }
 

@@ -256,5 +256,24 @@ namespace syll.be.Controllers.Form
 
 
 
+
+        [Permission(PermissionKeys.FormAdd)]
+        [HttpPost("drop-down")]
+        public ApiResponse CreateDropDownData([FromBody] CreateDropDownDataDto dto)
+        {
+            try
+            {
+                _formLayoutService.CreateDropDownData(dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+
+
+
     }
 }

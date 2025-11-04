@@ -10,5 +10,6 @@ namespace syll.be.application.Form.Interfaces
     public interface IFormDataService
     {
         public  Task<ImportGgSheetResponseDto> ImportDataForm(ImportGgSheetRequestDto dto);
+        public  Task<ImportGgSheetResponseDto> ImportDataTableForm(ImportGgSheetTableRequestDto dto);
     }
 }

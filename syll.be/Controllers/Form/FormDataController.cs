@@ -37,6 +37,21 @@ namespace syll.be.Controllers.Form
                 return OkException(ex);
             }
         }
-    
+
+        [Permission(PermissionKeys.FormImport)]
+        [HttpPost("table")]
+        public async Task<ApiResponse> ImportFormDataTable(ImportGgSheetTableRequestDto dto)
+        {
+            try
+            {
+                var data = await _formDataService.ImportDataTableForm(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
     }
 }

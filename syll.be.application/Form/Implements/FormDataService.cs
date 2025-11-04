@@ -36,13 +36,13 @@ namespace syll.be.application.Form.Implements
             _configuration = configuration;
         }
 
-
         public async Task<ImportGgSheetResponseDto> ImportDataForm(ImportGgSheetRequestDto dto)
         {
             _logger.LogInformation($"{nameof(ImportDataForm)} dto={JsonSerializer.Serialize(dto)}");
             var startTime = DateTime.UtcNow;
             var currentUserId = getCurrentUserId();
             var vietnamTime = GetVietnamTime();
+
             if (string.IsNullOrEmpty(dto.Url))
             {
                 throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
@@ -51,29 +51,39 @@ namespace syll.be.application.Form.Implements
             {
                 throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
             }
+
             var hasPermission = await _checkGoogleSheetPermission(dto.Url);
             if (!hasPermission)
             {
                 throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
             }
+
             var sheetData = await _getSheetData(dto.Url, dto.SheetName);
             if (sheetData == null || sheetData.Count == 0)
             {
                 throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
             }
+
             var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdFormLoai && !x.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+
             var totalRowsImported = 0;
             var totalDataImported = 0;
             var headers = sheetData[0];
             var dataRows = sheetData.Skip(1).ToList();
+
             var emailColumnIndex = headers.FindIndex(h => h.Equals("Email", StringComparison.OrdinalIgnoreCase));
             if (emailColumnIndex == -1)
             {
                 throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
             }
+
             var formTruongDataList = new List<domain.Form.FormTruongData>();
             var formDataList = new List<domain.Form.FormData>();
+
+          
+            var newTruongDataListToCreate = new List<domain.Form.FormTruongData>();
+
             for (int i = 0; i < headers.Count; i++)
             {
                 var header = headers[i];
@@ -82,6 +92,7 @@ namespace syll.be.application.Form.Implements
                 {
                     continue;
                 }
+
                 var newTruongData = new domain.Form.FormTruongData
                 {
                     IdFormLoai = dto.IdFormLoai,
@@ -92,28 +103,46 @@ namespace syll.be.application.Form.Implements
                     CreatedDate = vietnamTime,
                     Deleted = false
                 };
-                await _syllDbContext.FormTruongDatas.AddAsync(newTruongData);
-                await _syllDbContext.SaveChangesAsync();
-
-                newTruongData.IdItem = newTruongData.Id;
-                _syllDbContext.FormTruongDatas.Update(newTruongData);
-                await _syllDbContext.SaveChangesAsync();
-
-                formTruongDataList.Add(newTruongData);
+                newTruongDataListToCreate.Add(newTruongData);
             }
-            await _syllDbContext.BulkInsertAsync(formTruongDataList, new BulkConfig { SetOutputIdentity = true });
+
+            await _syllDbContext.BulkInsertAsync(newTruongDataListToCreate, new BulkConfig { SetOutputIdentity = true });
+
+
+            foreach (var truongData in newTruongDataListToCreate)
+            {
+                truongData.IdItem = truongData.Id;
+            }
+            await _syllDbContext.BulkUpdateAsync(newTruongDataListToCreate);
+
+            formTruongDataList.AddRange(newTruongDataListToCreate);
+
+           
+            var allEmails = dataRows
+                .Where(row => row.Count > emailColumnIndex && !string.IsNullOrEmpty(row[emailColumnIndex]))
+                .Select(row => row[emailColumnIndex])
+                .Distinct()
+                .ToList();
+
+            var danhBaDict = await _syllDbContext.DanhBas
+                .Where(x => allEmails.Contains(x.Email) && !x.Deleted)
+                .ToDictionaryAsync(x => x.Email);
+
             foreach (var row in dataRows)
             {
                 if (row.Count <= emailColumnIndex || string.IsNullOrEmpty(row[emailColumnIndex]))
                 {
                     continue;
                 }
+
                 var email = row[emailColumnIndex];
-                var danhBa = await _syllDbContext.DanhBas.FirstOrDefaultAsync(x => x.Email == email && !x.Deleted);
-                if (danhBa == null)
+
+              
+                if (!danhBaDict.TryGetValue(email, out var danhBa))
                 {
                     continue;
                 }
+
                 int truongDataIndex = 0;
                 for (int i = 0; i < headers.Count; i++)
                 {
@@ -123,6 +152,7 @@ namespace syll.be.application.Form.Implements
                     {
                         continue;
                     }
+
                     var data = i < row.Count ? row[i] : string.Empty;
                     var formData = new domain.Form.FormData
                     {
@@ -140,13 +170,16 @@ namespace syll.be.application.Form.Implements
                 }
                 totalRowsImported++;
             }
+
             if (formDataList.Any())
             {
                 await _syllDbContext.BulkInsertAsync(formDataList);
                 totalDataImported = formDataList.Count;
             }
+
             var endTime = DateTime.UtcNow;
             var importTimeInSeconds = (int)(endTime - startTime).TotalSeconds;
+
             return new ImportGgSheetResponseDto
             {
                 TotalRowsImported = totalRowsImported,
@@ -154,7 +187,181 @@ namespace syll.be.application.Form.Implements
                 ImportTimeInSeconds = importTimeInSeconds
             };
         }
+        public async Task<ImportGgSheetResponseDto> ImportDataTableForm(ImportGgSheetTableRequestDto dto)
+        {
+            _logger.LogInformation($"{nameof(ImportDataTableForm)} dto={JsonSerializer.Serialize(dto)}");
+            var startTime = DateTime.UtcNow;
+            var currentUserId = getCurrentUserId();
+            var vietnamTime = GetVietnamTime();
 
+            if (string.IsNullOrEmpty(dto.Url))
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+            if (string.IsNullOrEmpty(dto.SheetName))
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var hasPermission = await _checkGoogleSheetPermission(dto.Url);
+            if (!hasPermission)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var sheetData = await _getSheetData(dto.Url, dto.SheetName);
+            if (sheetData == null || sheetData.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdFormLoai && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+
+            var totalRowsImported = 0;
+            var totalDataImported = 0;
+            var headers = sheetData[0];
+            var dataRows = sheetData.Skip(1).ToList();
+
+            var emailColumnIndex = headers.FindIndex(h => h.Equals("Email", StringComparison.OrdinalIgnoreCase));
+            if (emailColumnIndex == -1)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var formTruongDataList = new List<domain.Form.FormTruongData>();
+            var formDataList = new List<domain.Form.FormData>();
+
+            
+            var relevantHeaders = headers
+                .Where(h => !h.Equals("Email", StringComparison.OrdinalIgnoreCase) &&
+                            !h.Equals("STT", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var existingTruongDataDict = await _syllDbContext.FormTruongDatas
+                .Where(x => relevantHeaders.Contains(x.TenTruong) &&
+                            x.IdFormLoai == dto.IdFormLoai &&
+                            x.IdItem == dto.IdItem &&
+                            !x.Deleted)
+                .ToDictionaryAsync(x => x.TenTruong);
+
+            for (int i = 0; i < headers.Count; i++)
+            {
+                var header = headers[i];
+                if (header.Equals("Email", StringComparison.OrdinalIgnoreCase) ||
+                    header.Equals("STT", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (existingTruongDataDict.TryGetValue(header, out var existingTruongData))
+                {
+                    formTruongDataList.Add(existingTruongData);
+                    continue;
+                }
+
+                var newTruongData = new domain.Form.FormTruongData
+                {
+                    IdFormLoai = dto.IdFormLoai,
+                    IdItem = dto.IdItem,
+                    TenTruong = header,
+                    Type = "string",
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+                await _syllDbContext.FormTruongDatas.AddAsync(newTruongData);
+                await _syllDbContext.SaveChangesAsync();
+                formTruongDataList.Add(newTruongData);
+
+                var maxOrder = _syllDbContext.Tables
+                    .Where(x => x.IdItem == dto.IdItem && !x.Deleted)
+                    .Max(x => (int?)x.Order) ?? 0;
+
+                var newTableHeader = new domain.Form.Table
+                {
+                    IdItem = dto.IdItem,
+                    Order = maxOrder + 1,
+                    Ratio = 10,
+                    CreatedBy = currentUserId,
+                    CreatedDate = vietnamTime,
+                    Deleted = false
+                };
+
+                await _syllDbContext.Tables.AddAsync(newTableHeader);
+                await _syllDbContext.SaveChangesAsync();
+            }
+
+            
+            var allEmails = dataRows
+                .Where(row => row.Count > emailColumnIndex && !string.IsNullOrEmpty(row[emailColumnIndex]))
+                .Select(row => row[emailColumnIndex])
+                .Distinct()
+                .ToList();
+
+            var danhBaDict = await _syllDbContext.DanhBas
+                .Where(x => allEmails.Contains(x.Email) && !x.Deleted)
+                .ToDictionaryAsync(x => x.Email);
+
+            foreach (var row in dataRows)
+            {
+                if (row.Count <= emailColumnIndex || string.IsNullOrEmpty(row[emailColumnIndex]))
+                {
+                    continue;
+                }
+
+                var email = row[emailColumnIndex];
+
+               
+                if (!danhBaDict.TryGetValue(email, out var danhBa))
+                {
+                    continue;
+                }
+
+                int truongDataIndex = 0;
+                for (int i = 0; i < headers.Count; i++)
+                {
+                    var header = headers[i];
+                    if (header.Equals("Email", StringComparison.OrdinalIgnoreCase) ||
+                        header.Equals("STT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var data = i < row.Count ? row[i] : string.Empty;
+                    var formData = new domain.Form.FormData
+                    {
+                        IdFormLoai = dto.IdFormLoai,
+                        Data = data,
+                        IdTruongData = formTruongDataList[truongDataIndex].Id,
+                        IdDanhBa = danhBa.Id,
+                        IndexRowTable = null,
+                        CreatedBy = currentUserId,
+                        CreatedDate = vietnamTime,
+                        Deleted = false
+                    };
+                    formDataList.Add(formData);
+                    truongDataIndex++;
+                }
+                totalRowsImported++;
+            }
+
+            if (formDataList.Any())
+            {
+                await _syllDbContext.BulkInsertAsync(formDataList);
+                totalDataImported = formDataList.Count;
+            }
+
+            var endTime = DateTime.UtcNow;
+            var importTimeInSeconds = (int)(endTime - startTime).TotalSeconds;
+
+            return new ImportGgSheetResponseDto
+            {
+                TotalRowsImported = totalRowsImported,
+                TotalDataImported = totalDataImported,
+                ImportTimeInSeconds = importTimeInSeconds
+            };
+        }
 
         private async Task<List<List<string>>> _getSheetData(string sheetUrl, string sheetName)
         {

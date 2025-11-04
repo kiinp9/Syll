@@ -130,6 +130,15 @@ namespace syll.be.application.Form.Implements
                 .OrderBy(i => i.Order)
                 .ToList();
             var itemIds = items.Select(i => i.Id).ToList();
+
+
+            var tableItemIds = items.Where(i => i.Type == ItemConstants.Table).Select(i => i.Id).ToList();
+
+            var tableHeaders = _syllDbContext.Tables
+                .Where(t => tableItemIds.Contains(t.IdItem) && !t.Deleted)
+                .OrderBy(t => t.Order)
+                .ToList();
+
             var formTruongDatas = _syllDbContext.FormTruongDatas
                 .Where(f => itemIds.Contains(f.IdItem) && !f.Deleted)
                 .ToList();
@@ -195,7 +204,18 @@ namespace syll.be.application.Form.Implements
                                         }).ToList()
                                         : new List<GetDropDownData?>()
                                 };
-                            }).ToList()
+                            }).ToList(),
+                            Headers = i.Type == ItemConstants.Table
+                                ? tableHeaders.Where(th => th.IdItem == i.Id).Select(th => new GetTableHeader
+                                {
+                                    Id = th.Id,
+                                    Data = formTruongDatas.FirstOrDefault(f => f.Id == th.Id)?.TenTruong ?? string.Empty,
+                                    Order = th.Order,
+                                    Ratio = th.Ratio,
+                                    Type = formTruongDatas.FirstOrDefault(f => f.Id == th.Id)?.Type ?? string.Empty,
+                                    Class = th.Class
+                                }).ToList()
+                                : new List<GetTableHeader?>()
                         }).ToList()
                     }).ToList()
                 }).ToList()
@@ -524,6 +544,31 @@ namespace syll.be.application.Form.Implements
             row.DeletedDate = vietNamNow;
             _syllDbContext.Items.Update(item);
             _syllDbContext.SaveChangesAsync();
+        }
+
+
+        public void CreateDropDownData (CreateDropDownDataDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateDropDownData)} dto = {JsonSerializer.Serialize(dto)}");
+            var vietnamNow = GetVietnamTime();
+            var currentUserId = getCurrentUserId();
+            var truongData = _syllDbContext.FormTruongDatas.FirstOrDefault( x => x.Id == dto.IdTruongData && !x.Deleted)
+                ?? throw new UserFriendlyException (ErrorCodes.FormLoaiErrorTruongDataNotFound);
+            var maxOrder = _syllDbContext.DropDowns
+               .Where(x => x.IdTruongData == dto.IdTruongData && !x.Deleted)
+               .Max(x => (int?)x.Order) ?? 0;
+
+            var dropdownData = new domain.Form.DropDown
+            {
+                IdTruongData = dto.IdTruongData,
+                Data = dto.Data,
+                Order = maxOrder + 1,
+                CreatedBy = currentUserId,
+                CreatedDate = vietnamNow,
+            };
+            _syllDbContext.DropDowns.Add(dropdownData);
+            _syllDbContext.SaveChangesAsync();
+
         }
     }
 

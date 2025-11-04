@@ -23,7 +23,7 @@ namespace syll.be.domain.Form
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int IdTruongData { get; set; }
+        public int IdItem { get; set; }
         //order item trong bảng
         public int Order { get; set; }
         //% hiển thị trong item table

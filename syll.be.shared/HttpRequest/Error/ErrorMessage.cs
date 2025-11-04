@@ -38,7 +38,8 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.FormLoaiErrorItemNotFound, "Item không tồn tại" },
             { ErrorCodes.FormLoaiErrorItemOrderInvalid,"Thứ tự item không hợp lệ" },
             { ErrorCodes.FormLoaiErrorItemTypeInvalid,"Loại item không hợp lệ" },
-            { ErrorCodes.FormLoaiErrorLayoutOrderInvalid,"Thứ tự layout không hợp lệ" }
+            { ErrorCodes.FormLoaiErrorLayoutOrderInvalid,"Thứ tự layout không hợp lệ" },
+            { ErrorCodes.FormLoaiErrorTruongDataNotFound,"Trường data không tồn tại" }
 
         };
 

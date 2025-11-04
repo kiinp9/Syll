@@ -46,7 +46,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public string Style { get; set; } = String.Empty;
         public string Class { get; set; } = String.Empty;
         public decimal Ratio { get; set; }
-        public List<GetFormTruongData> Items { get; set; } = new List<GetFormTruongData>();    
+        public List<GetFormTruongData> Items { get; set; } = new List<GetFormTruongData>();
+        public List<GetTableHeader?> Headers { get; set; } = new List<GetTableHeader?>();
     }
 
     public class GetFormTruongData
@@ -75,5 +76,16 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Order { get; set; }
         public string Class { get;set; } = String.Empty;
         public string Style { get; set; } = String.Empty;
+    }
+
+
+    public class GetTableHeader
+    {
+        public int Id { get; set; }
+        public string Data { get; set; } = String.Empty;
+        public int Order { get; set; }
+        public decimal Ratio { get; set; }
+        public string Type { get; set; } = String.Empty;
+        public string Class { get; set; } = String.Empty;
     }
 }
