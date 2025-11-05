@@ -46,6 +46,18 @@
 													value={item.items[0].item.data}
 												/>
 											</div>
+										{:else if item.type === FormItemsTypes.DropDownDate}
+											<div class="">
+												<Label for={item.items[0].id?.toString()} class="mb-2"
+													>{item.items[0].tenTruong}</Label
+												>
+												<Input
+													id={item.items[0].id?.toString()}
+													name={item.items[0].id?.toString()}
+													type="date"
+													value={item.items[0].item.data}
+												/>
+											</div>
 										{:else if item.type === FormItemsTypes.DropDownText}
 											<div class="">
 												<Label for={item.items[0].id?.toString()} class="mb-2"
