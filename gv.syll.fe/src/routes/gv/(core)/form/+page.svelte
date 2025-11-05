@@ -81,6 +81,16 @@
 													</Select.Content>
 												</Select.Root>
 											</div>
+										{:else if item.type === FormItemsTypes.Table}
+											<table class="border-collapse border border-gray-300 w-full">
+												<thead class="bg-gray-100">
+													<tr>
+														{#each item.items as col (col.id)}
+															<th class="border border-gray-300 px-4 py-2 text-left">{col.tenTruong}</th>
+														{/each}
+													</tr>
+												</thead>
+											</table>
 										{:else}
 											{item.items[0].tenTruong}
 										{/if}
