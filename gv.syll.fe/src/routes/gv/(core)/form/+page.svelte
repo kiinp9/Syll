@@ -25,11 +25,11 @@
 	{/if}
 	<form method="POST" class="mt-5">
 		<div class="flex flex-col">
-			{#each formLayoutData?.items as block (block.id)}
+			{#each formLayoutData?.items as block (`block_${block.id}`)}
 				<div class="mb-5 pb-5 border-b {block.class}" style={block.style}>
-					{#each block.items as row (row.id)}
+					{#each block.items as row (`row_${row.id}`)}
 						<div class="mb-2 flex flex-row space-x-2 {row.class}" style={row.style}>
-							{#each row.items as item, itemIndex (item.id)}
+							{#each row.items as item, itemIndex (`item_${item.id}`)}
 								<div class="flex flex-col w-full {row.class}" style={row.style}>
 									{#if item.items && item.items[0]}
 										{#if item.type === FormItemsTypes.ItemText}
@@ -82,15 +82,21 @@
 												</Select.Root>
 											</div>
 										{:else if item.type === FormItemsTypes.Table}
-											<table class="border-collapse border border-gray-300 w-full">
-												<thead class="bg-gray-100">
-													<tr>
-														{#each item.items as col (col.id)}
-															<th class="border border-gray-300 px-4 py-2 text-left">{col.tenTruong}</th>
-														{/each}
-													</tr>
-												</thead>
-											</table>
+											<div
+												class="grid border-2"
+												style="grid-template-columns: repeat({item.headers?.length}, 1fr);"
+											>
+												{#each item.headers as col, idx (`tbl_header_${item.id}_${col.id}_${idx}`)}
+													<div
+														class="border border-gray-300 px-4 py-2 text-center font-bold bg-slate-200"
+													>
+														{col.data}
+													</div>
+												{/each}
+												{#each item.items as cell, idx (`tbl_body_${item.id}_${cell.id}_${idx}`)}
+													<div class="border border-gray-300 px-4 py-2">{cell.item.data}</div>
+												{/each}
+											</div>
 										{:else}
 											{item.items[0].tenTruong}
 										{/if}

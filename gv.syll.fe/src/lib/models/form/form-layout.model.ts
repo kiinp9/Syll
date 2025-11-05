@@ -33,6 +33,7 @@ export interface IViewFormItem {
 	style?: string;
 	inputName?: string;
 	items?: IViewItemTruongData[];
+	headers?: IViewTblHeader[];
 }
 
 export interface IViewItemTruongData {
@@ -55,6 +56,16 @@ export interface IViewFormSelectOption {
 	id?: number;
 	data: string;
 	order?: number;
+	class?: string;
+	style?: string;
+}
+
+export interface IViewTblHeader {
+	id?: number;
+	data: string;
+	order?: number;
+	ratio?: number
+	type?: string;
 	class?: string;
 	style?: string;
 }
