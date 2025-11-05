@@ -28,7 +28,7 @@
 			`&scope=openid offline_access` +
 			`&prompt=login&code_challenge=${codeChallenge}&code_challenge_method=${AuthConstants.PKCE_CODE_CHALLENGE_METHOD}`;
 		console.log(url);
-		window.location.href = url;
+		// window.location.href = url;
 	}
 </script>
 
