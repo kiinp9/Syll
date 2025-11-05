@@ -21,6 +21,8 @@ using syll.be.domain.Auth;
 using syll.be.infrastructure.data;
 using syll.be.infrastructure.data.Seeder;
 using syll.be.infrastructure.external.BackgroundJob;
+using syll.be.lib.Form.Implements;
+using syll.be.lib.Form.Interfaces;
 using syll.be.shared.Constants.Auth;
 using syll.be.shared.Settings;
 using syll.be.Workers;
@@ -230,6 +232,7 @@ builder.Services.AddScoped<IDanhBaService, DanhBaService>();
 builder.Services.AddScoped<IFormService, FormService>();
 builder.Services.AddScoped<IFormLayoutService, FormLayoutService>();
 builder.Services.AddScoped<IFormDataService, FormDataService>();
+builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
 
 #endregion
 

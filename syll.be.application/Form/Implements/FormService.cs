@@ -201,10 +201,9 @@ namespace syll.be.application.Form.Implements
 
         public async Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto)
         {
-            _logger.LogInformation($"{nameof(UpdateFormData)}" );
+            _logger.LogInformation($"{nameof(UpdateFormData)}");
             using var transaction = _syllDbContext.Database.BeginTransaction();
             var idDanhBa = await GetCurrentDanhBaId();
-
             try
             {
                 var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
@@ -238,14 +237,10 @@ namespace syll.be.application.Form.Implements
                 {
                     if (existingFormDataDict.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
                     {
-                        bool isDataChanged = existingFormData.Data != truongDataDto.Data;
-                        if (isDataChanged)
-                        {
-                            existingFormData.Data = truongDataDto.Data;
-                            existingFormData.UpdatedDate = vietNamNow;
-                            existingFormData.UpdatedBy = currentUserId;
-                            _syllDbContext.Entry(existingFormData).State = EntityState.Modified;
-                        }
+                        existingFormData.Data = truongDataDto.Data;
+                        existingFormData.ModifiedDate = vietNamNow;
+                        existingFormData.ModifiedBy = currentUserId;
+                        _syllDbContext.Entry(existingFormData).State = EntityState.Modified;
                     }
                 }
                 _syllDbContext.SaveChanges();
@@ -288,6 +283,8 @@ namespace syll.be.application.Form.Implements
                     if (existingFormDatas.TryGetValue(truongDataDto.IdTruong, out var existingFormData))
                     {
                         existingFormData.Data = truongDataDto.Data;
+                        existingFormData.ModifiedDate = vietNamNow;
+                        existingFormData.ModifiedBy = currentUserId;
                     }
                     else
                     {
@@ -310,7 +307,7 @@ namespace syll.be.application.Form.Implements
             catch (Exception ex)
             {
                 transaction.Rollback();
-                _logger.LogError(ex, $"Error in {nameof(UpdateFormData)}");
+                _logger.LogError(ex, $"Error in {nameof(UpdateFormDataForAdmin)}");
                 throw;
             }
         }

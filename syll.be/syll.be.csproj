@@ -34,7 +34,8 @@
   <ItemGroup>
 	<ProjectReference Include="..\syll.be.application\syll.be.application.csproj" />
 	<ProjectReference Include="..\syll.be.infrastructure.data\syll.be.infrastructure.data.csproj" />
-	<ProjectReference Include="..\syll.be.infrastructure.external\syll.be.infrastructure.external.csproj" /> 
+	<ProjectReference Include="..\syll.be.infrastructure.external\syll.be.infrastructure.external.csproj" />
+	<ProjectReference Include="..\syll.be.lib\syll.be.lib.csproj" />
   </ItemGroup>
 
 </Project>

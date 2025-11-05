@@ -26,6 +26,6 @@ namespace syll.be.shared.Interfaces
     public interface IModifiedBy
     {
         public DateTime? ModifiedDate { get; set; }
-        public int? ModifiedBy { get; set; }
+        public string? ModifiedBy { get; set; }
     }
 }
