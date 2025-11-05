@@ -3,18 +3,24 @@ export interface IViewFormLayout {
 	idFormLoai?: number;
 	ten?: string;
 	order?: number;
+	class?: string;
+	style?: string;
 	items?: IViewFormBlock[];
 }
 
 export interface IViewFormBlock {
 	id?: number;
 	order?: number;
+	class?: string;
+	style?: string;
 	items?: IViewFormRow[];
 }
 
 export interface IViewFormRow {
 	id?: number;
 	order?: number;
+	class?: string;
+	style?: string;
 	items: IViewFormItem[];
 }
 
@@ -23,6 +29,9 @@ export interface IViewFormItem {
 	order?: number;
 	type?: number;
 	ratio?: number;
+	class?: string;
+	style?: string;
+	inputName?: string;
 	items?: IViewItemTruongData[];
 }
 
@@ -30,6 +39,8 @@ export interface IViewItemTruongData {
 	id?: number;
 	tenTruong?: string;
 	type?: string;
+	class?: string;
+	style?: string;
 	item: IViewItemData;
 	items?: IViewFormSelectOption[];
 }
