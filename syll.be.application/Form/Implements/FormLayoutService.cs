@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using syll.be.application.Base;
 using syll.be.application.Form.Dtos.FormLayout;
 using syll.be.application.Form.Interfaces;
+using syll.be.domain.Form;
 using syll.be.infrastructure.data;
 using syll.be.shared.Constants.Form;
 using syll.be.shared.HttpRequest.AppException;
@@ -179,41 +180,49 @@ namespace syll.be.application.Form.Implements
                             Style = i.Style,
                             Class = i.Class,
                             Ratio = i.Ratio,
-                            Items = formTruongDatas.Where(f => f.IdItem == i.Id).Select(f =>
-                            {
-                                var fd = formDatas.FirstOrDefault(fd => fd.IdTruongData == f.Id);
-                                return new GetFormTruongData
+                            Items = i.Type == ItemConstants.Table
+                                ? GetTableRowsData(i.Id, formTruongDatas, formDatas)
+                                : formTruongDatas.Where(f => f.IdItem == i.Id).Select(f =>
                                 {
-                                    Id = f.Id,
-                                    TenTruong = f.TenTruong,
-                                    Type = f.Type,
-                                    Item = fd != null ? new GetFormData
+                                    var fd = formDatas.FirstOrDefault(fd => fd.IdTruongData == f.Id);
+                                    return new GetFormTruongData
                                     {
-                                        Id = fd.Id,
-                                        Data = fd.Data,
-                                        IndexRowTable = fd.IndexRowTable
-                                    } : new GetFormData(),
-                                    Items = i.Type == ItemConstants.DropDownText
-                                        ? dropDowns.Where(dd => dd.IdTruongData == f.Id).Select(dd => new GetDropDownData
+                                        Id = f.Id,
+                                        TenTruong = f.TenTruong,
+                                        Type = f.Type,
+                                        Item = fd != null ? new GetFormData
                                         {
-                                            Id = dd.Id,
-                                            Data = dd.Data,
-                                            Order = dd.Order,
-                                            Class = dd.Class,
-                                            Style = dd.Style
-                                        }).ToList()
-                                        : new List<GetDropDownData?>()
-                                };
-                            }).ToList(),
+                                            Id = fd.Id,
+                                            Data = fd.Data,
+                                            IndexRowTable = fd.IndexRowTable
+                                        } : new GetFormData(),
+                                        Items = i.Type == ItemConstants.DropDownText
+                                            ? dropDowns.Where(dd => dd.IdTruongData == f.Id).Select(dd => new GetDropDownData
+                                            {
+                                                Id = dd.Id,
+                                                Data = dd.Data,
+                                                Order = dd.Order,
+                                                Class = dd.Class,
+                                                Style = dd.Style
+                                            }).ToList()
+                                            : new List<GetDropDownData?>()
+                                    };
+                                }).ToList(),
                             Headers = i.Type == ItemConstants.Table
-                                ? tableHeaders.Where(th => th.IdItem == i.Id).Select(th => new GetTableHeader
+                                ? tableHeaders.Where(th => th.IdItem == i.Id).Select(th =>
                                 {
-                                    Id = th.Id,
-                                    Data = formTruongDatas.FirstOrDefault(f => f.Id == th.Id)?.TenTruong ?? string.Empty,
-                                    Order = th.Order,
-                                    Ratio = th.Ratio,
-                                    Type = formTruongDatas.FirstOrDefault(f => f.Id == th.Id)?.Type ?? string.Empty,
-                                    Class = th.Class
+                                    var formTruongDataList = formTruongDatas.Where(f => f.IdItem == i.Id).OrderBy(f => f.Id).ToList();
+                                    var correspondingFormTruongData = formTruongDataList.ElementAtOrDefault(th.Order - 1);
+
+                                    return new GetTableHeader
+                                    {
+                                        Id = th.Id,
+                                        Data = correspondingFormTruongData?.TenTruong ?? string.Empty,
+                                        Order = th.Order,
+                                        Ratio = th.Ratio,
+                                        Type = correspondingFormTruongData?.Type ?? string.Empty,
+                                        Class = th.Class
+                                    };
                                 }).ToList()
                                 : new List<GetTableHeader?>()
                         }).ToList()
@@ -223,6 +232,45 @@ namespace syll.be.application.Form.Implements
             return result;
         }
 
+        private List<GetFormTruongData> GetTableRowsData(int itemId, List<FormTruongData> formTruongDatas, List<FormData> formDatas)
+        {
+            var itemFormTruongDatas = formTruongDatas.Where(f => f.IdItem == itemId).ToList();
+            var truongDataIds = itemFormTruongDatas.Select(f => f.Id).ToList();
+            var itemFormDatas = formDatas.Where(fd => truongDataIds.Contains(fd.IdTruongData)).ToList();
+
+            // Group theo IndexRowTable
+            var rowIndexes = itemFormDatas
+                .Select(fd => fd.IndexRowTable ?? 0)
+                .Distinct()
+                .OrderBy(idx => idx)
+                .ToList();
+
+            var result = new List<GetFormTruongData>();
+
+            foreach (var rowIndex in rowIndexes)
+            {
+                foreach (var formTruongData in itemFormTruongDatas)
+                {
+                    var fd = itemFormDatas.FirstOrDefault(fd => fd.IdTruongData == formTruongData.Id && (fd.IndexRowTable ?? 0) == rowIndex);
+
+                    result.Add(new GetFormTruongData
+                    {
+                        Id = formTruongData.Id,
+                        TenTruong = formTruongData.TenTruong,
+                        Type = formTruongData.Type,
+                        Item = fd != null ? new GetFormData
+                        {
+                            Id = fd.Id,
+                            Data = fd.Data,
+                            IndexRowTable = fd.IndexRowTable
+                        } : new GetFormData(),
+                        Items = new List<GetDropDownData?>()
+                    });
+                }
+            }
+
+            return result;
+        }
         public void DeleteLayout(int idFormLoai, int idLayout)
         {
             _logger.LogInformation($"{nameof(DeleteLayout)} idFormLoai = {idFormLoai} idLayout ={idLayout}");
