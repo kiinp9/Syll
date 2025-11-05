@@ -30,16 +30,16 @@ export const actions: Actions = {
 
 		// Convert form data to plain object
 		const body: {
-			truongData: any[];
+			truongDatas: any[];
 		} = {
-			truongData: []
+			truongDatas: []
 		};
 
 		for (const [key, value] of formData.entries()) {
 			const idTruong = Number(key);
 
 			if (!Number.isNaN(idTruong)) {
-				body.truongData.push({
+				body.truongDatas.push({
 					idTruong: Number(key),
 					data: value.toString()
 				});
