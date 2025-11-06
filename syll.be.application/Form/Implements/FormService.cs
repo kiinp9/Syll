@@ -312,6 +312,35 @@ namespace syll.be.application.Form.Implements
             }
         }
 
+
+
+        public void CreateTruongData (CreateTruongDataDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateTruongData)} dto = {JsonSerializer.Serialize(dto)}");
+
+            var currentUserId = getCurrentUserId();
+            var vietNamNow = GetVietnamTime();
+            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdFormLoai && !x.Deleted)
+                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+
+            var item = _syllDbContext.Items.FirstOrDefault(x => x.Id == dto.IdItem && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorItemNotFound);
+            var truongData = new domain.Form.FormTruongData
+            {
+                IdFormLoai = dto.IdFormLoai,
+                IdItem = dto.IdItem,
+                TenTruong = dto.TenTruong,
+                Type = "string",
+                CreatedDate = vietNamNow,
+                CreatedBy = currentUserId,
+                Deleted = false
+
+            };
+            _syllDbContext.FormTruongDatas.Add( truongData );
+            _syllDbContext.SaveChanges();
+
+        }
+
     }
 
 }

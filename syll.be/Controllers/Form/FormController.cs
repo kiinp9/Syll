@@ -174,5 +174,24 @@ namespace syll.be.Controllers.Form
                 return OkException(ex);
             }
         }
+
+
+
+
+        [Permission(PermissionKeys.FormAdd)]
+        [HttpPost("truong-data")]
+        public ApiResponse CreateTruongData([FromBody] CreateTruongDataDto dto)
+        {
+            try
+            {
+                _formService.CreateTruongData(dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+
+        }
     }
 }

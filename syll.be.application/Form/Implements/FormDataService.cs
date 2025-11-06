@@ -232,7 +232,7 @@ namespace syll.be.application.Form.Implements
             var formTruongDataList = new List<domain.Form.FormTruongData>();
             var formDataList = new List<domain.Form.FormData>();
 
-            
+
             var relevantHeaders = headers
                 .Where(h => !h.Equals("Email", StringComparison.OrdinalIgnoreCase) &&
                             !h.Equals("STT", StringComparison.OrdinalIgnoreCase))
@@ -292,7 +292,7 @@ namespace syll.be.application.Form.Implements
                 await _syllDbContext.SaveChangesAsync();
             }
 
-            
+
             var allEmails = dataRows
                 .Where(row => row.Count > emailColumnIndex && !string.IsNullOrEmpty(row[emailColumnIndex]))
                 .Select(row => row[emailColumnIndex])
@@ -303,6 +303,8 @@ namespace syll.be.application.Form.Implements
                 .Where(x => allEmails.Contains(x.Email) && !x.Deleted)
                 .ToDictionaryAsync(x => x.Email);
 
+            var emailIndexRowDict = new Dictionary<string, int>();
+
             foreach (var row in dataRows)
             {
                 if (row.Count <= emailColumnIndex || string.IsNullOrEmpty(row[emailColumnIndex]))
@@ -312,11 +314,22 @@ namespace syll.be.application.Form.Implements
 
                 var email = row[emailColumnIndex];
 
-               
+
                 if (!danhBaDict.TryGetValue(email, out var danhBa))
                 {
                     continue;
                 }
+
+                if (!emailIndexRowDict.ContainsKey(email))
+                {
+                    emailIndexRowDict[email] = 1;
+                }
+                else
+                {
+                    emailIndexRowDict[email]++;
+                }
+
+                var currentIndexRow = emailIndexRowDict[email];
 
                 int truongDataIndex = 0;
                 for (int i = 0; i < headers.Count; i++)
@@ -335,7 +348,7 @@ namespace syll.be.application.Form.Implements
                         Data = data,
                         IdTruongData = formTruongDataList[truongDataIndex].Id,
                         IdDanhBa = danhBa.Id,
-                        IndexRowTable = null,
+                        IndexRowTable = currentIndexRow,
                         CreatedBy = currentUserId,
                         CreatedDate = vietnamTime,
                         Deleted = false
