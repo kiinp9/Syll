@@ -199,7 +199,7 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = googleClientId;
         options.ClientSecret = googleClientSecret;
         options.ReturnUrlParameter = "redirect_uri";
-        options.CallbackPath = "/signin-google";
+        //options.CallbackPath = "/signin-google";
         //options.CallbackPath = googleRedirectUri;
     });
     /*.AddMicrosoftAccount(options =>
