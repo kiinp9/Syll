@@ -11,6 +11,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using syll.be.application.Auth.Interfaces;
 using syll.be.domain.Auth;
+using syll.be.infrastructure.data;
 using syll.be.shared.Constants.Auth;
 using syll.be.shared.HttpRequest.AppException;
 using syll.be.shared.HttpRequest.Error;
@@ -30,13 +31,16 @@ namespace syll.be.Controllers.Auth
         private readonly IUsersService _usersService;
         private readonly AuthServerSettings _authServerSettings;
         private readonly ILogger<AuthorizationController> _logger;
+        private readonly SyllDbContext _syllDbContext;
 
         public AuthorizationController(
+            SyllDbContext syllDbContext,
             IOpenIddictApplicationManager applicationManager,
             IUsersService usersService,
             IOptions<AuthServerSettings> options,
             ILogger<AuthorizationController> logger)
         {
+            _syllDbContext = syllDbContext;
             _applicationManager = applicationManager;
             _usersService = usersService;
             _authServerSettings = options.Value;
@@ -365,7 +369,6 @@ namespace syll.be.Controllers.Auth
         [HttpGet("~/external-callback")]
         public async Task<IActionResult> ExternalCallback(
             [FromServices] UserManager<AppUser> userManager,
-            [FromServices] DbContext dbContext,
             string? returnUrl = "/",
             string? remoteError = null)
         {
@@ -392,7 +395,7 @@ namespace syll.be.Controllers.Auth
             _logger.LogInformation("External authentication successful for email: {Email}", email);
 
             // Kiểm tra email có tồn tại trong bảng DanhBa không
-            var danhBaExists = await dbContext.Set<syll.be.domain.DanhBa.DanhBa>()
+            var danhBaExists = await _syllDbContext.DanhBas
                 .AsNoTracking()
                 .AnyAsync(x => x.Email == email && !x.Deleted);
 
