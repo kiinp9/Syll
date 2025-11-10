@@ -62,7 +62,7 @@ namespace syll.be.Controllers.Form
 
 
 
-        [Permission(PermissionKeys.FormView)]
+        //[Permission(PermissionKeys.FormView)]
         [HttpGet("")]
         public ApiResponse Find([FromQuery] FindPagingFormLoaiDto dto)
         {
@@ -96,7 +96,7 @@ namespace syll.be.Controllers.Form
 
 
 
-        [Permission(PermissionKeys.FormView)]
+        //[Permission(PermissionKeys.FormView)]
         [HttpGet("{id}")]
         public ApiResponse GetFormLoaiById([FromRoute] int id)
         {
