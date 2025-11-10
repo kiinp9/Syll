@@ -323,6 +323,59 @@ namespace syll.be.application.Form.Implements
                 throw;
             }
         }
+
+        public async Task DeleteRowTableData(DeleteRowTableDataDto dto)
+        {
+            _logger.LogInformation($"{nameof(DeleteRowTableData)} dto={JsonSerializer.Serialize(dto)}");
+
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var idDanhBa = await GetCurrentDanhBaId();
+
+                var allIdDatas = dto.Truongs
+                    .SelectMany(t => t.Datas.Select(d => d.IdData))
+                    .Distinct()
+                    .ToList();
+
+                if (allIdDatas.Count == 0)
+                {
+                    await transaction.CommitAsync();
+                    return;
+                }
+
+                var formDatasToDelete = await _syllDbContext.FormDatas
+                    .Where(x => allIdDatas.Contains(x.Id)
+                        && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                        && !x.Deleted)
+                    .ToListAsync();
+
+                if (formDatasToDelete.Count == 0)
+                {
+                    await transaction.CommitAsync();
+                    return;
+                }
+
+                var vietNamNow = GetVietnamTime();
+                var currentUserId = getCurrentUserId();
+
+                foreach (var record in formDatasToDelete)
+                {
+                    record.Deleted = true;
+                    record.DeletedBy = currentUserId;
+                    record.DeletedDate = vietNamNow;
+                }
+
+                await _syllDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, $"Error in {nameof(DeleteRowTableData)}");
+                throw;
+            }
+        }
         public async Task UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateFormDataForAdmin)}  dto={JsonSerializer.Serialize(dto)}");

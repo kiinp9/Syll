@@ -20,7 +20,7 @@ namespace syll.be.application.Form.Interfaces
         public Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto);
         public Task UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto);
         public List<GetDropDownDataResponseDto?> GetDropDownData(int idTruongData);
-
+        public  Task DeleteRowTableData(DeleteRowTableDataDto dto);
         public void CreateTruongData(CreateTruongDataDto dto);
     }
 }

@@ -240,7 +240,6 @@ namespace syll.be.application.Form.Implements
             var truongDataIds = itemFormTruongDatas.Select(f => f.Id).ToList();
             var itemFormDatas = formDatas.Where(fd => truongDataIds.Contains(fd.IdTruongData)).ToList();
 
-            // Group theo IndexRowTable
             var rowIndexes = itemFormDatas
                 .Select(fd => fd.IndexRowTable ?? 0)
                 .Distinct()

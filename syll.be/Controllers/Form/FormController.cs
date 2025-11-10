@@ -176,6 +176,19 @@ namespace syll.be.Controllers.Form
         }
 
 
+        [HttpDelete("row-table")]
+        public async Task<ApiResponse> DeleteRowTableData([FromBody] DeleteRowTableDataDto dto)
+        {
+            try
+            {
+                await _formService.DeleteRowTableData(dto);
+                return new();
+            }catch(Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
 
 
         [Permission(PermissionKeys.FormAdd)]

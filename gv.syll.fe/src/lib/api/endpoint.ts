@@ -4,4 +4,5 @@ export const ENDPOINTS = {
     getFormPaging: '/api/core/form',
     getGvLayout: '/api/core/form-layout',
     updateFormContent: (idForm: number) => `/api/core/form/${idForm}/form-content`,
+    deleteRowTableData: '/api/core/form/row-table'
 }

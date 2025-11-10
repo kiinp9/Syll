@@ -8,7 +8,28 @@
 	let { data, form } = $props();
 
 	let formLayoutData = $state(data.data);
-	// export let form;
+
+	async function handleDeleteRow(item: any, rowIndex: number) {
+		const startIdx = rowIndex * item.headers!.length;
+		const rowCells = item.items!.slice(startIdx, startIdx + item.headers!.length);
+
+		const formData = new FormData();
+		rowCells.forEach((cell: any) => {
+			if (cell.item?.id && cell.item.id > 0) {
+				formData.append(`${cell.id}_${cell.item.id}`, '');
+			}
+		});
+
+		const response = await fetch('?/deleteRow', {
+			method: 'POST',
+			body: formData
+		});
+
+		if (response.ok) {
+			item.items!.splice(startIdx, item.headers!.length);
+			item.items = item.items;
+		}
+	}
 </script>
 
 <div>
@@ -23,7 +44,7 @@
 			</div>
 		{/if}
 	{/if}
-	<form method="POST" class="mt-5">
+	<form method="POST" action="?/update" class="mt-5">
 		<div class="flex flex-col">
 			{#each formLayoutData?.items as block (`block_${block.id}`)}
 				<div class="mb-5 pb-5 border-b {block.class}" style={block.style}>
@@ -115,9 +136,7 @@
 																<div class="border border-gray-300 px-4 py-2 flex justify-center items-center">
 																	<Button type="button" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm" onclick={() => {
 																		const rowIndex = Math.floor(idx / item.headers!.length);
-																		const startIdx = rowIndex * item.headers!.length;
-																		item.items!.splice(startIdx, item.headers!.length);
-																		item.items = item.items;
+																		handleDeleteRow(item, rowIndex);
 																	}}>Xóa</Button>
 																</div>
 															{/if}

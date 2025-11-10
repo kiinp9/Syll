@@ -70,3 +70,15 @@ export interface IViewTblHeader {
 	class?: string;
 	style?: string;
 }
+
+export interface IDeleteRowTableData{
+    truongs: IDeleteTruongDataTable[];
+}
+export interface IDeleteTruongDataTable{
+	idTruong?:number;
+	datas:IDeleteDataTable[];
+}
+
+export interface IDeleteDataTable{
+	idData?: number;
+}

@@ -1,12 +1,11 @@
 import type { Actions, PageServerLoad } from '../$types';
-import { API_BASE_URL } from '$env/static/private'; // Not exposed to client
+import { API_BASE_URL } from '$env/static/private';
 import type { IBaseResponse, IBaseResponseWithData } from '$lib/models/shared/base-response';
 import { ENDPOINTS } from '$lib/api/endpoint';
 import type { IViewFormLayout } from '$lib/models/form/form-layout.model';
 import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ fetch, cookies, params }) => {
-
 	const formId = (params as any)?.id;
 
 	if (!formId) {
@@ -31,7 +30,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, params }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, fetch }) => {
+	update: async ({ request, fetch }) => {
 		const formData = await request.formData();
 
 		const truongMap = new Map<number, { idData: number; data: string }[]>();
@@ -70,6 +69,54 @@ export const actions: Actions = {
 		});
 
 		console.log('RES =>', JSON.stringify(body));
+
+		if (!res.ok) {
+			const failedRes: IBaseResponse = {
+				message: 'Có sự cố xảy ra',
+				code: -1,
+				status: 0
+			};
+			return failedRes;
+		}
+
+		const data: IBaseResponse = await res.json();
+		return data;
+	},
+
+	deleteRow: async ({ request, fetch }) => {
+		const formData = await request.formData();
+
+		const truongMap = new Map<number, number[]>();
+
+		for (const [key, value] of formData.entries()) {
+			const parts = key.split('_');
+			if (parts.length === 2) {
+				const idTruong = Number(parts[0]);
+				const idData = Number(parts[1]);
+
+				if (!Number.isNaN(idTruong) && !Number.isNaN(idData)) {
+					if (!truongMap.has(idTruong)) {
+						truongMap.set(idTruong, []);
+					}
+					truongMap.get(idTruong)!.push(idData);
+				}
+			}
+		}
+
+		const body = {
+			truongs: Array.from(truongMap.entries()).map(([idTruongData, idDatas]) => ({
+				idTruongData: idTruongData,
+				datas: idDatas.map((idData) => ({ idData }))
+			}))
+		};
+
+		const res = await fetch(`${API_BASE_URL}${ENDPOINTS.deleteRowTableData}`, {
+			method: 'DELETE',
+			body: JSON.stringify(body),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
 
 		if (!res.ok) {
 			const failedRes: IBaseResponse = {
