@@ -19,13 +19,13 @@
 	<AppSidebar
 		navMain={[
 			{
-				url: '/gv/dashboard',
+				url: '/admin/home',
 				title: 'Trang chủ',
 				icon: HouseIcon
 				// icon: HouseIcon,
 			},
 			{
-				url: '/gv/form',
+				url: '#',
 				title: 'Quản lý form',
 				icon: NewspaperIcon
 			},
