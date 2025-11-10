@@ -20,6 +20,24 @@ namespace syll.be.Controllers.Form
             _logger = logger;
         }
 
+        [HttpPost("form-loai/{idFormLoai}/replace")]
+        public async Task<IActionResult> ReplaceWordFormTemplate([FromRoute] int idFormLoai)
+        {
+            try
+            {
+                var replaceBytes = await _formTemplateService.ReplaceWordFormTemplate(idFormLoai);
+                return File(
+                    replaceBytes,
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    $"SoYeuLyLich_{DateTime.Now:yyyyMMddHHmmss}.docx"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error replacing word template for IdFormLoai={idFormLoai}");
+                return Ok(OkException(ex));
+            }
+        }
 
 
         [HttpPost("generate")]

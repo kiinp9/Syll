@@ -15,9 +15,14 @@ namespace syll.be.application.Form.Dtos.Form
     public class UpdateFormTruongDataRequestDto
     {
         public int IdTruong { get; set; }
-        public string Data { get; set; } = string.Empty;
+        public List<UpdateListFormDataRequestDto>  Datas { get; set; } = new List<UpdateListFormDataRequestDto> { };
 
+    }
 
+    public class UpdateListFormDataRequestDto
+    {
+        public int IdData { get; set; }
+        public string Data { get; set; } = String.Empty;
     }
 
 }

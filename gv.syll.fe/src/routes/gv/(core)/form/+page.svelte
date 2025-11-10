@@ -41,7 +41,7 @@
 												>
 												<Input
 													id={item.items[0].id?.toString()}
-													name={item.items[0].id?.toString()}
+													name={`${item.items[0].id}_${item.items[0].item.id}`}
 													type="text"
 													value={item.items[0].item.data}
 												/>
@@ -53,7 +53,7 @@
 												>
 												<Input
 													id={item.items[0].id?.toString()}
-													name={item.items[0].id?.toString()}
+													name={`${item.items[0].id}_${item.items[0].item.id}`}
 													type="date"
 													value={item.items[0].item.data}
 												/>
@@ -69,7 +69,7 @@
 													onValueChange={(val) => {
 														row.items[itemIndex].items![0].item.data = val;
 													}}
-													name={item.items[0].id?.toString()}
+													name={`${item.items[0].id}_${item.items[0].item.id}`}
 												>
 													<Select.Trigger class="w-full">
 														{item.items[0].item.data || 'Chọn giá trị'}
@@ -82,20 +82,62 @@
 												</Select.Root>
 											</div>
 										{:else if item.type === FormItemsTypes.Table}
-											<div
-												class="grid border-2"
-												style="grid-template-columns: repeat({item.headers?.length}, 1fr);"
-											>
-												{#each item.headers as col, idx (`tbl_header_${item.id}_${col.id}_${idx}`)}
+											<div>
+												<div
+													class="grid border-2"
+													style="grid-template-columns: repeat({item.headers?.length || 0}, 1fr) auto;"
+												>
+													{#if item.headers}
+														{#each item.headers as col, idx (`tbl_header_${item.id}_${col.id}_${idx}`)}
+														<div
+															class="border border-gray-300 px-4 py-2 text-center font-bold bg-slate-200"
+														>
+															{col.data}
+														</div>
+													{/each}
 													<div
 														class="border border-gray-300 px-4 py-2 text-center font-bold bg-slate-200"
 													>
-														{col.data}
+														Thao tác
 													</div>
-												{/each}
-												{#each item.items as cell, idx (`tbl_body_${item.id}_${cell.id}_${idx}`)}
-													<div class="border border-gray-300 px-4 py-2">{cell.item.data}</div>
-												{/each}
+													{/if}
+													{#if item.items}
+														{#each item.items as cell, idx (`tbl_body_${item.id}_${cell.id}_${idx}`)}
+															<div class="border border-gray-300 px-2 py-2">
+																<Input
+																	type="text"
+																	bind:value={cell.item.data}
+																	name={`${cell.id}_${cell.item?.id ?? 0}`}
+																	class="w-full"
+																/>
+															</div>
+															{#if item.headers && (idx + 1) % item.headers.length === 0}
+																<div class="border border-gray-300 px-4 py-2 flex justify-center items-center">
+																	<Button type="button" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm" onclick={() => {
+																		const rowIndex = Math.floor(idx / item.headers!.length);
+																		const startIdx = rowIndex * item.headers!.length;
+																		item.items!.splice(startIdx, item.headers!.length);
+																		item.items = item.items;
+																	}}>Xóa</Button>
+																</div>
+															{/if}
+														{/each}
+													{/if}
+												</div>
+												<div class="mt-2">
+													<Button type="button" class="bg-blue-600 hover:bg-blue-700 text-white" onclick={() => {
+														if (item.headers) {
+															const newRow = item.headers.map((header, idx) => ({
+																id: header.id,
+																item: { 
+																	id: 0,
+																	data: '' 
+																}
+															}));
+															item.items = [...(item.items || []), ...newRow];
+														}
+													}}>+ Thêm dòng</Button>
+												</div>
 											</div>
 										{:else}
 											{item.items[0].tenTruong}
@@ -108,7 +150,8 @@
 				</div>
 			{/each}
 		</div>
-		<div class="flex flex-row justify-end">
+		<div class="flex flex-row justify-end space-x-2">
+			<Button type="button" class="bg-green-600 hover:bg-green-700">Xuất</Button>
 			<Button type="submit">Lưu</Button>
 		</div>
 	</form>

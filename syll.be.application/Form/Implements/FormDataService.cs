@@ -191,6 +191,7 @@ namespace syll.be.application.Form.Implements
         {
             _logger.LogInformation($"{nameof(ImportDataTableForm)} dto={JsonSerializer.Serialize(dto)}");
             var startTime = DateTime.UtcNow;
+
             var currentUserId = getCurrentUserId();
             var vietnamTime = GetVietnamTime();
 

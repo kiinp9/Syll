@@ -10,4 +10,9 @@
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
   </ItemGroup>
 
+
+	<ItemGroup>
+		<ProjectReference Include="..\syll.be.infrastructure.data\syll.be.infrastructure.data.csproj" />
+	</ItemGroup>
+
 </Project>

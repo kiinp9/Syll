@@ -147,11 +147,11 @@ namespace syll.be.Controllers.Form
 
         [Permission(PermissionKeys.FormUpdate)]
         [HttpPut("{idFormLoai}/danha-ba/{idDanhBa}/form-content-admin")]
-        public ApiResponse UpdateFormDataForAdmin([FromRoute] int idFormLoai,[FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
+        public async Task<ApiResponse> UpdateFormDataForAdmin([FromRoute] int idFormLoai,[FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
         {
             try
             {
-                _formService.UpdateFormDataForAdmin(idFormLoai,idDanhBa, dto);
+                await _formService.UpdateFormDataForAdmin(idFormLoai,idDanhBa, dto);
                 return new();
             }
             catch (Exception ex)

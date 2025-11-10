@@ -28,23 +28,32 @@ export const actions: Actions = {
 	default: async ({ request, fetch }) => {
 		const formData = await request.formData();
 
-		// Convert form data to plain object
-		const body: {
-			truongDatas: any[];
-		} = {
-			truongDatas: []
-		};
+		const truongMap = new Map<number, { idData: number; data: string }[]>();
 
 		for (const [key, value] of formData.entries()) {
-			const idTruong = Number(key);
+			const parts = key.split('_');
+			if (parts.length === 2) {
+				const idTruong = Number(parts[0]);
+				const idData = Number(parts[1]);
 
-			if (!Number.isNaN(idTruong)) {
-				body.truongDatas.push({
-					idTruong: Number(key),
-					data: value.toString()
-				});
+				if (!Number.isNaN(idTruong) && !Number.isNaN(idData)) {
+					if (!truongMap.has(idTruong)) {
+						truongMap.set(idTruong, []);
+					}
+					truongMap.get(idTruong)!.push({
+						idData: idData,
+						data: value.toString()
+					});
+				}
 			}
 		}
+
+		const body = {
+			truongDatas: Array.from(truongMap.entries()).map(([idTruong, datas]) => ({
+				idTruong: idTruong,
+				datas: datas
+			}))
+		};
 
 		const res = await fetch(`${API_BASE_URL}${ENDPOINTS.updateFormContent(1)}`, {
 			method: 'PUT',

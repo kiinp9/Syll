@@ -18,7 +18,7 @@ namespace syll.be.application.Form.Interfaces
 
         //public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa(int idFormLoai,int idDanhBa);
         public Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto);
-        public void UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto);
+        public Task UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto);
         public List<GetDropDownDataResponseDto?> GetDropDownData(int idTruongData);
 
         public void CreateTruongData(CreateTruongDataDto dto);
