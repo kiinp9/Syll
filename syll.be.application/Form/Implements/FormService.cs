@@ -287,6 +287,15 @@ namespace syll.be.application.Form.Implements
 
                 if (dataToInsert.Count > 0)
                 {
+
+                    var allIdTruongsInTable = dataToInsert.Select(x => x.IdTruongData).Distinct().ToList();
+
+                    var maxIndexRowOrder = await _syllDbContext.FormDatas
+                        .Where(x => allIdTruongsInTable.Contains(x.IdTruongData)
+                            && x.IdFormLoai == idFormLoai
+                            && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                            && !x.Deleted)
+                        .MaxAsync(x => (int?)x.IndexRowTable) ?? 0;
                     var newRecords = dataToInsert.Select(item => new FormData
                     {
                         IdFormLoai = idFormLoai,
@@ -296,6 +305,7 @@ namespace syll.be.application.Form.Implements
                         CreatedDate = vietNamNow,
                         CreatedBy = currentUserId,
                         ModifiedDate = vietNamNow,
+                        IndexRowTable = maxIndexRowOrder + 1,
                         //ModifiedBy = currentUserId,
                         Deleted = false
                     }).ToList();

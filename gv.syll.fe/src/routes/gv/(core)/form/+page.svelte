@@ -126,9 +126,13 @@
 												</div>
 												<div class="mt-2">
 													<Button type="button" class="bg-blue-600 hover:bg-blue-700 text-white" onclick={() => {
-														if (item.headers) {
-															const newRow = item.headers.map((header, idx) => ({
-																id: header.id,
+														if (item.headers && item.items && item.items.length > 0 ) {
+															const firstRowIds = item.items
+															    .slice(0, item.headers.length)
+																.map(cell => cell.id);
+
+															const newRow = firstRowIds.map((idTruongData) => ({
+																id: idTruongData,
 																item: { 
 																	id: 0,
 																	data: '' 

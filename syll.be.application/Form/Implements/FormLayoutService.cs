@@ -146,6 +146,7 @@ namespace syll.be.application.Form.Implements
             var truongDataIds = formTruongDatas.Select(f => f.Id).ToList();
             var formDatas = _syllDbContext.FormDatas
                 .Where(fd => truongDataIds.Contains(fd.IdTruongData) && fd.IdDanhBa == idDanhBa && !fd.Deleted)
+                .OrderBy(fd => fd.Id)
                 .ToList();
             var dropDowns = _syllDbContext.DropDowns
                 .Where(dd => truongDataIds.Contains(dd.IdTruongData) && !dd.Deleted)
@@ -217,6 +218,7 @@ namespace syll.be.application.Form.Implements
                                     return new GetTableHeader
                                     {
                                         Id = th.Id,
+                                        IdTruongData = th.IdTruongData,
                                         Data = correspondingFormTruongData?.TenTruong ?? string.Empty,
                                         Order = th.Order,
                                         Ratio = th.Ratio,

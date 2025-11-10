@@ -63,6 +63,7 @@ export interface IViewFormSelectOption {
 export interface IViewTblHeader {
 	id?: number;
 	data: string;
+	idTruongData ?: number;
 	order?: number;
 	ratio?: number
 	type?: string;

@@ -82,6 +82,7 @@ namespace syll.be.application.Form.Dtos.FormLayout
     public class GetTableHeader
     {
         public int Id { get; set; }
+        public int IdTruongData { get; set; }
         public string Data { get; set; } = String.Empty;
         public int Order { get; set; }
         public decimal Ratio { get; set; }
