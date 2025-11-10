@@ -4,11 +4,10 @@
 	import ChartColumnIcon from '@lucide/svelte/icons/chart-column';
 	import HouseIcon from '@lucide/svelte/icons/house';
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <Sidebar.Provider>
@@ -36,7 +35,7 @@
 				icon: ChartColumnIcon
 			}
 		]}
-		user={{}}
+		user={data.user ?? {}}
 	/>
 	<Sidebar.Inset>
 		<header class="flex h-16 shrink-0 items-center gap-2">

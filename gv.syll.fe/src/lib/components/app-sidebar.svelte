@@ -23,7 +23,7 @@
 	}: ComponentProps<typeof Sidebar.Root> & { navMain: any[], user: IViewUserMe } = $props();
 </script>
 
-<Sidebar.Root bind:ref variant="inset" {...restProps}>
+<Sidebar.Root bind:ref variant="sidebar" {...restProps}>
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
@@ -47,7 +47,7 @@
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<NavMain items={navMain} />
-		<NavProjects projects={data.projects} />
+		<!-- <NavProjects projects={data.projects} /> -->
 		<NavSecondary items={data.navSecondary} class="mt-auto" />
 	</Sidebar.Content>
 	<Sidebar.Footer>
