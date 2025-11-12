@@ -25,7 +25,7 @@
 				// icon: HouseIcon,
 			},
 			{
-				url: '#',
+				url: '/admin/form-management',
 				title: 'Quản lý form',
 				icon: NewspaperIcon
 			},
