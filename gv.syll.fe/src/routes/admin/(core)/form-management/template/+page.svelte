@@ -75,6 +75,8 @@
 		}
 	) {
 		e.preventDefault();
+		console.log(e.currentTarget.dataset);
+        const index = e.currentTarget.dataset?.index;
 
 		if (e.dataTransfer) {
 			const item = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -84,7 +86,8 @@
 
 			const newBlock = { type: 'block', id: crypto.randomUUID(), children: [] };
 			// page.update((p) => [...p, newBlock]);
-			page.push(newBlock);
+			// page.push(newBlock);
+			page.splice(Number(index), 0, newBlock)
 		}
 	}
 
@@ -156,12 +159,18 @@
 		{/each}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="col-span-3 border w-full p-2" ondragover={allowDrop} ondrop={handleDropBlock}>
+	<div class="col-span-3 border w-full p-2" ondragover={allowDrop}>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		{#each page as block, blockIdx (block.id)}
+			<div
+				class="w-full h-2.5"
+				ondragover={allowDrop}
+				data-index={blockIdx}
+				ondrop={handleDropBlock}
+			></div>
 			<div class="block">
 				<div class="flex flex-row space-x-2 items-center">
-					<p>Block</p>
+					<p>Block {block.id}</p>
 					<Trash class="w-4 h-4 cursor-pointer" onclick={() => onRemoveBlock(blockIdx)} />
 				</div>
 				<div
@@ -198,5 +207,11 @@
 				</div>
 			</div>
 		{/each}
+		<div
+			class="w-full h-2.5"
+			ondragover={allowDrop}
+			data-index={page.length}
+			ondrop={handleDropBlock}
+		></div>
 	</div>
 </div>
