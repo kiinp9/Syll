@@ -129,5 +129,55 @@ export const actions: Actions = {
 
 		const data: IBaseResponse = await res.json();
 		return data;
-	}
+	},
+
+	deleteBlock: async ({ request, fetch }) => {
+		const formData = await request.formData();
+
+		const truongMap = new Map<number, number[]>();
+
+		for (const [key, value] of formData.entries()) {
+			const parts = key.split('_');
+			if (parts.length === 2) {
+				const idTruong = Number(parts[0]);
+				const idData = Number(parts[1]);
+
+				if (!Number.isNaN(idTruong) && !Number.isNaN(idData) && idData > 0) {
+					if (!truongMap.has(idTruong)) {
+						truongMap.set(idTruong, []);
+					}
+					truongMap.get(idTruong)!.push(idData);
+				}
+			}
+		}
+
+		const body = {
+			truongs: Array.from(truongMap.entries()).map(([idTruongData, idDatas]) => ({
+				idTruongData: idTruongData,
+				datas: idDatas.map((idData) => ({ idData }))
+			}))
+		};
+
+		const res = await fetch(`${API_BASE_URL}${ENDPOINTS.deleteRowTableData}`, {
+			method: 'DELETE',
+			body: JSON.stringify(body),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		if (!res.ok) {
+			const failedRes: IBaseResponse = {
+				message: 'Có sự cố xảy ra',
+				code: -1,
+				status: 0
+			};
+			return failedRes;
+		}
+
+		const data: IBaseResponse = await res.json();
+		return data;
+	},
+
+	
 };

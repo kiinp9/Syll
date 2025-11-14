@@ -17,6 +17,7 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Order { get; set; }
 
         public List<GetBlockDto> Items { get; set; } = new List<GetBlockDto>();
+        public List<GetTruongNhanBanCustom> TruongCustoms { get; set; } = new List<GetTruongNhanBanCustom>();
     }
 
     public class GetBlockDto
@@ -32,6 +33,7 @@ namespace syll.be.application.Form.Dtos.FormLayout
     {
         public int Id { get; set; }
         public int Order { get; set; }
+        public bool ShowNutCustom { get; set; }
         public string Style { get; set; } = String.Empty;
         public string Class { get; set; } = String.Empty;
         public List<GetItemDto> Items { get; set; } = new List<GetItemDto>();
@@ -55,6 +57,8 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public int Id { get; set; }
         public string TenTruong { get; set; } = String.Empty;
         public string Type { get; set; } = String.Empty;
+        //public bool IsTruongCustom { get; set; }
+        public int BlockTruongNhanBan { get; set; }
         public GetFormData Item { get; set; } = new GetFormData();
 
         public List<GetDropDownData?> Items { get; set; } = new List<GetDropDownData?>();
@@ -88,5 +92,15 @@ namespace syll.be.application.Form.Dtos.FormLayout
         public decimal Ratio { get; set; }
         public string Type { get; set; } = String.Empty;
         public string Class { get; set; } = String.Empty;
+    }
+     public class GetTruongNhanBanCustom
+    {
+        public int Id { get; set; }
+        public string TenTruong { get; set; } = String.Empty;
+        public string Type { get; set; } = String.Empty;
+        //public bool IsTruongCustom { get; set; }
+        public int BlockTruongNhanBan { get; set; }
+        public GetFormData Item { get; set; } = new GetFormData();
+
     }
 }

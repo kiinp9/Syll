@@ -1,13 +1,16 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using WordTable = DocumentFormat.OpenXml.Wordprocessing.Table;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using syll.be.domain.Form;
 using syll.be.infrastructure.data;
 using syll.be.lib.Form.Dtos;
 using syll.be.lib.Form.Interfaces;
+using syll.be.shared.Constants.Form;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,101 +35,32 @@ namespace syll.be.lib.Form.Implements
 
         public async Task<byte[]> ReplaceWordFormTemplate(int idFormLoai)
         {
-            _logger.LogInformation($"{nameof(ReplaceWordFormTemplate)} idFormLoai = {JsonSerializer.Serialize(idFormLoai)}");
             var idDanhBa = await GetCurrentDanhBaId();
 
-            // Lấy dữ liệu từ FormData và FormTruongData
             var formDataList = await _syllDbContext.FormDatas
-                .Where(fd => fd.IdFormLoai == idFormLoai && fd.IdDanhBa == idDanhBa && !fd.Deleted)
+                .Where(x => x.IdFormLoai == idFormLoai && x.IdDanhBa == idDanhBa && !x.Deleted)
                 .ToListAsync();
 
-            _logger.LogInformation($"[DEBUG] Tổng số FormData tìm thấy: {formDataList.Count}");
-
-            if (!formDataList.Any())
-            {
-                _logger.LogWarning($"No data found for IdFormLoai={idFormLoai}, IdDanhBa={idDanhBa}");
-                return GenerateSoYeuLyLichTemplate();
-            }
-
-            var idTruongDataList = formDataList.Select(fd => fd.IdTruongData).Distinct().ToList();
-            _logger.LogInformation($"[DEBUG] Số lượng IdTruongData unique: {idTruongDataList.Count}");
+            var truongDataIds = formDataList.Select(x => x.IdTruongData).Distinct().ToList();
 
             var formTruongDataList = await _syllDbContext.FormTruongDatas
-                .Where(ftd => idTruongDataList.Contains(ftd.Id) && !ftd.Deleted)
+                .Where(x => truongDataIds.Contains(x.Id) && !x.Deleted)
                 .ToListAsync();
 
-            _logger.LogInformation($"[DEBUG] Số lượng FormTruongData tìm thấy: {formTruongDataList.Count}");
+            var truongNhaOList = formTruongDataList
+                .Where(x => x.BlockTruongNhanBan == TruongDataConstants.NhaO)
+                .OrderBy(x => x.IndexInTemplate)
+                .ToList();
 
-            // Map TenTruong -> Data cho các trường đơn giản
-            var dataMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var truongDatOList = formTruongDataList
+                .Where(x => x.BlockTruongNhanBan == TruongDataConstants.DatO)
+                .OrderBy(x => x.IndexInTemplate)
+                .ToList();
 
-            // Map TenTruong -> List<Data> cho dữ liệu bảng (có IndexRowTable)
-            var tableDataMapping = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            int cloneCountNhaO = CalculateCloneCount(formDataList, truongNhaOList);
+            int cloneCountDatO = CalculateCloneCount(formDataList, truongDatOList);
 
-            // Trong phần build mapping của ReplaceWordFormTemplate, thay thế đoạn code xử lý IndexRowTable
-            foreach (var formData in formDataList)
-            {
-                var truongData = formTruongDataList.FirstOrDefault(ftd => ftd.Id == formData.IdTruongData);
-                if (truongData == null)
-                {
-                    _logger.LogWarning($"[DEBUG] Không tìm thấy TruongData cho IdTruongData={formData.IdTruongData}");
-                    continue;
-                }
-
-                var tenTruong = truongData.TenTruong.Trim();
-                var data = formData.Data ?? "";
-
-                if (formData.IndexRowTable.HasValue && formData.IndexRowTable.Value > 0)
-                {
-                    // Dữ liệu bảng - IndexRowTable bắt đầu từ 1
-                    if (!tableDataMapping.ContainsKey(tenTruong))
-                    {
-                        tableDataMapping[tenTruong] = new List<string>();
-                        _logger.LogInformation($"[DEBUG] Khởi tạo bảng cho trường: '{tenTruong}'");
-                    }
-
-                    // IndexRowTable = 1 tương ứng List[0], IndexRowTable = 2 tương ứng List[1]
-                    var listIndex = formData.IndexRowTable.Value - 1;
-
-                    // Đảm bảo có đủ rows
-                    while (tableDataMapping[tenTruong].Count <= listIndex)
-                    {
-                        tableDataMapping[tenTruong].Add("");
-                    }
-
-                    tableDataMapping[tenTruong][listIndex] = data;
-                    _logger.LogInformation($"[DEBUG] Bảng - '{tenTruong}' [IndexRowTable={formData.IndexRowTable.Value}, ListIndex={listIndex}] = '{data}'");
-                }
-                else
-                {
-                    // Dữ liệu đơn giản (IndexRowTable null hoặc 0)
-                    dataMapping[tenTruong] = data;
-                    _logger.LogInformation($"[DEBUG] Dòng - '{tenTruong}' = '{data}'");
-                }
-            }
-
-            _logger.LogInformation($"[DEBUG] Tổng số trường dòng đơn: {dataMapping.Count}");
-            _logger.LogInformation($"[DEBUG] Tổng số trường bảng: {tableDataMapping.Count}");
-
-            // Log chi tiết các trường dòng đơn
-            foreach (var kvp in dataMapping)
-            {
-                _logger.LogInformation($"[DEBUG] DataMapping: '{kvp.Key}' = '{kvp.Value}'");
-            }
-
-            // Log chi tiết các trường bảng
-            foreach (var kvp in tableDataMapping)
-            {
-                _logger.LogInformation($"[DEBUG] TableDataMapping: '{kvp.Key}' có {kvp.Value.Count} dòng");
-                for (int i = 0; i < kvp.Value.Count; i++)
-                {
-                    _logger.LogInformation($"[DEBUG]   Row {i}: '{kvp.Value[i]}'");
-                }
-            }
-
-            // Generate template
             var templateBytes = GenerateSoYeuLyLichTemplate();
-            _logger.LogInformation($"[DEBUG] Template size: {templateBytes.Length} bytes");
 
             using var memoryStream = new MemoryStream();
             memoryStream.Write(templateBytes, 0, templateBytes.Length);
@@ -136,468 +70,791 @@ namespace syll.be.lib.Form.Implements
             {
                 var body = document.MainDocumentPart.Document.Body;
 
-                // Replace dấu ... bằng dữ liệu
-                _logger.LogInformation($"[DEBUG] Bắt đầu replace dữ liệu dòng đơn");
-                ReplaceDotsWithData(body, dataMapping);
+                CloneFieldsForBlock(body, truongNhaOList, cloneCountNhaO, "Nhà ở");
+                CloneFieldsForBlock(body, truongDatOList, cloneCountDatO, "Đất ở");
 
-                // Replace data trong bảng
-                _logger.LogInformation($"[DEBUG] Bắt đầu replace dữ liệu bảng");
-                ReplaceTableData(body, tableDataMapping);
+                var truongNhanBanIds = truongNhaOList.Select(x => x.Id)
+                    .Concat(truongDatOList.Select(x => x.Id))
+                    .ToList();
 
-                _logger.LogInformation($"[DEBUG] Bắt đầu replace dữ liệu dòng đơn (lần 2 - sau bảng)");
-                ReplaceDotsWithData(body, dataMapping);
+                var rowDataList = formDataList
+                    .Where(x => !truongNhanBanIds.Contains(x.IdTruongData))
+                    .ToList();
+
+                foreach (var formData in rowDataList)
+                {
+                    var truongData = formTruongDataList.FirstOrDefault(x => x.Id == formData.IdTruongData);
+                    if (truongData == null) continue;
+
+                    int index = truongData.IndexInTemplate;
+                    string data = formData.Data;
+
+                    if (DateTime.TryParse(data, out DateTime dateValue))
+                    {
+                        if (index == 9)
+                        {
+                            ReplaceSpecialBirthdayField(body, dateValue);
+                            continue;
+                        }
+                        else
+                        {
+                            data = dateValue.ToString("dd/MM/yyyy");
+                        }
+                    }
+
+                    ReplaceFieldInDocument(body, index, data);
+                }
+
+                ReplaceBlockTruongNhanBanData(body, formDataList, truongNhaOList, "Nhà ở");
+                ReplaceBlockTruongNhanBanData(body, formDataList, truongDatOList, "Đất ở");
+
+                var tableItems = await _syllDbContext.Items
+                    .Where(item => item.Type == 5 && !item.Deleted &&
+                        _syllDbContext.Rows.Any(row => row.Id == item.IdRow && !row.Deleted &&
+                            _syllDbContext.Blocks.Any(block => block.Id == row.IdBlock && !block.Deleted &&
+                                _syllDbContext.Layouts.Any(layout => layout.Id == block.IdLayout &&
+                                    layout.IdFormLoai == idFormLoai && !layout.Deleted))))
+                    .OrderBy(item => item.Id)
+                    .ToListAsync();
+
+                var itemToTableIndexMap = new Dictionary<int, int>();
+                for (int i = 0; i < tableItems.Count; i++)
+                {
+                    itemToTableIndexMap[tableItems[i].Id] = i + 1;
+                }
+
+                var tableItemIds = tableItems.Select(x => x.Id).ToList();
+
+                var tableRecords = await _syllDbContext.Tables
+                    .Where(x => tableItemIds.Contains(x.IdItem) && !x.Deleted)
+                    .OrderBy(x => x.IdItem).ThenBy(x => x.Order)
+                    .ToListAsync();
+
+                var tableTruongDataIds = tableRecords.Select(x => x.IdTruongData).Distinct().ToList();
+
+                var tableFormDataList = await _syllDbContext.FormDatas
+                    .Where(x => tableTruongDataIds.Contains(x.IdTruongData) &&
+                        x.IdDanhBa == idDanhBa &&
+                        x.IndexRowTable.HasValue &&
+                        !x.Deleted)
+                    .ToListAsync();
+
+                var tableDataGroups = tableFormDataList
+                    .GroupBy(x => x.IdTruongData)
+                    .ToList();
+
+                foreach (var group in tableDataGroups)
+                {
+                    var tableRecord = tableRecords.FirstOrDefault(x => x.IdTruongData == group.Key);
+                    if (tableRecord == null) continue;
+
+                    int itemId = tableRecord.IdItem;
+                    int columnIndex = tableRecord.Order;
+
+                    var rowGroups = group.GroupBy(x => x.IndexRowTable.Value).OrderBy(x => x.Key);
+
+                    foreach (var rowGroup in rowGroups)
+                    {
+                        int rowIndex = rowGroup.Key;
+
+                        foreach (var formData in rowGroup)
+                        {
+                            string data = formData.Data;
+                            ReplaceFieldInTable(body, columnIndex, rowIndex, data, itemId, itemToTableIndexMap);
+                        }
+                    }
+                }
 
                 document.MainDocumentPart.Document.Save();
             }
 
-            var resultBytes = memoryStream.ToArray();
-            _logger.LogInformation($"[DEBUG] Result file size: {resultBytes.Length} bytes");
-
-            return resultBytes;
+            return memoryStream.ToArray();
         }
 
-        private void ReplaceDotsWithData(Body body, Dictionary<string, string> dataMapping)
+        private int CalculateCloneCount(List<FormData> formDataList, List<FormTruongData> truongList)
         {
-            var textElements = body.Descendants<Text>().ToList();
-            _logger.LogInformation($"[DEBUG] ReplaceDotsWithData: Tổng số Text elements: {textElements.Count}");
+            if (!truongList.Any()) return 0;
 
-            int replacedCount = 0;
+            var truongIds = truongList.Select(x => x.Id).ToList();
 
-            var normalizedDbMapping = new Dictionary<string, (string OriginalKey, string Value)>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kvp in dataMapping)
+            var maxIndex = formDataList
+                .Where(x => truongIds.Contains(x.IdTruongData) && x.IndexRowTable.HasValue)
+                .Select(x => x.IndexRowTable.Value)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return maxIndex > 0 ? maxIndex - 1 : 0;
+        }
+
+        private (int startIndex, int endIndex) GetBlockParagraphRange(
+            List<Paragraph> paragraphs,
+            List<FormTruongData> truongList)
+        {
+            int startIndex = -1;
+            int endIndex = -1;
+
+            var firstPattern = GetFieldPatternByIndex(truongList.OrderBy(x => x.IndexInTemplate).First().IndexInTemplate);
+            var lastPattern = GetFieldPatternByIndex(truongList.OrderBy(x => x.IndexInTemplate).Last().IndexInTemplate);
+
+            for (int i = 0; i < paragraphs.Count; i++)
             {
-                var normalizedKey = NormalizeText(kvp.Key);
-                if (!string.IsNullOrWhiteSpace(normalizedKey))
+                var text = paragraphs[i].InnerText;
+
+                if (startIndex == -1 && text.Contains(firstPattern))
                 {
-                    normalizedDbMapping[normalizedKey] = (kvp.Key, kvp.Value);
+                    startIndex = i;
+                }
+
+                if (startIndex != -1 && text.Contains(lastPattern))
+                {
+                    endIndex = i;
+                    break;
                 }
             }
 
-            foreach (var textElement in textElements)
-            {
-                if (string.IsNullOrEmpty(textElement.Text)) continue;
-
-                var originalText = textElement.Text;
-                var text = originalText;
-
-                if (!text.Contains("...") && !text.Contains("..") && !text.Contains("…")) continue;
-
-                _logger.LogInformation($"[DEBUG] Đang xử lý text có dots: '{text}'");
-
-                bool textChanged = false;
-
-                // XỬ LÝ 1: Pattern với prefix + hoặc - (BẤT KỲ VỊ TRÍ nào, không chỉ đầu dòng)
-                // Sửa: Bỏ ^ để cho phép match ở bất kỳ vị trí nào
-                var fieldWithPrefixPattern = @"([\+\-])\s*([^:]+?)[\s:]*([.…/]{2,})(?:\s*(m2|cm|kg|vnđ|đồng|%))?";
-                var prefixMatches = System.Text.RegularExpressions.Regex.Matches(text, fieldWithPrefixPattern);
-
-                if (prefixMatches.Count > 0)
-                {
-                    _logger.LogInformation($"[DEBUG] Tìm thấy {prefixMatches.Count} trường có prefix +/-");
-
-                    // Xử lý TỪNG match (có thể có nhiều trường + hoặc - trong cùng 1 text element)
-                    foreach (System.Text.RegularExpressions.Match prefixMatch in prefixMatches)
-                    {
-                        var prefix = prefixMatch.Groups[1].Value;
-                        var templateFieldRaw = prefixMatch.Groups[2].Value.Trim();
-                        var dots = prefixMatch.Groups[3].Value;
-                        var unit = prefixMatch.Groups[4].Value;
-
-                        templateFieldRaw = templateFieldRaw.TrimEnd(',', ';');
-                        var normalizedTemplateField = NormalizeText(templateFieldRaw);
-
-                        _logger.LogInformation($"[DEBUG]   Trường với prefix '{prefix}': '{templateFieldRaw}' -> Normalized: '{normalizedTemplateField}' -> Unit: '{unit}'");
-
-                        if (normalizedDbMapping.TryGetValue(normalizedTemplateField, out var dbData))
-                        {
-                            var originalKey = dbData.OriginalKey;
-                            var data = dbData.Value;
-
-                            if (!string.IsNullOrWhiteSpace(data))
-                            {
-                                var formattedData = FormatDateIfNeeded(data);
-
-                                // Pattern để replace: giữ nguyên prefix
-                                var escapedField = System.Text.RegularExpressions.Regex.Escape(templateFieldRaw);
-                                var replacePattern = string.IsNullOrWhiteSpace(unit)
-                                    ? $@"[\+\-]\s*{escapedField}[\s:]*[.…/]+"
-                                    : $@"[\+\-]\s*{escapedField}[\s:]*[.…/]+\s*{System.Text.RegularExpressions.Regex.Escape(unit)}";
-
-                                var replacement = string.IsNullOrWhiteSpace(unit)
-                                    ? $"{prefix} {templateFieldRaw}: {formattedData}"
-                                    : $"{prefix} {templateFieldRaw}: {formattedData} {unit}";
-
-                                var newText = System.Text.RegularExpressions.Regex.Replace(
-                                    text,
-                                    replacePattern,
-                                    replacement,
-                                    System.Text.RegularExpressions.RegexOptions.None
-                                );
-
-                                if (newText != text)
-                                {
-                                    _logger.LogInformation($"[DEBUG]   Replace thành công: '{originalKey}' = '{formattedData}'");
-                                    _logger.LogInformation($"[DEBUG]     From: '{text}'");
-                                    _logger.LogInformation($"[DEBUG]     To: '{newText}'");
-
-                                    text = newText;
-                                    replacedCount++;
-                                    textChanged = true;
-                                }
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"[DEBUG]   Trường '{originalKey}' không có data -> Giữ nguyên dấu ...");
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogInformation($"[DEBUG]   Không tìm thấy data cho trường: '{normalizedTemplateField}'");
-                        }
-                    }
-                }
-
-                // XỬ LÝ 2: Pattern thông thường (không có +/-)
-                if (!textChanged) // Chỉ xử lý nếu chưa thay đổi bởi pattern prefix
-                {
-                    var fieldPattern = @"([^:\.;]+?(?:\([^)]*\))?)[\s:]*([.…/]{2,})(?:\s*(m2|cm|kg|vnđ|đồng|%))?";
-                    var matches = System.Text.RegularExpressions.Regex.Matches(text, fieldPattern);
-
-                    _logger.LogInformation($"[DEBUG] Tìm thấy {matches.Count} trường thông thường trong dòng này");
-
-                    var fieldAfterCommaPattern = @",\s*([^:,]+?)[\s:]*([.…/]{2,})(?:\s*(m2|cm|kg|vnđ|đồng|%))?";
-                    var additionalMatches = System.Text.RegularExpressions.Regex.Matches(text, fieldAfterCommaPattern);
-
-                    var allMatches = new List<System.Text.RegularExpressions.Match>();
-                    foreach (System.Text.RegularExpressions.Match m in matches)
-                    {
-                        allMatches.Add(m);
-                    }
-
-                    if (additionalMatches.Count > 0)
-                    {
-                        _logger.LogInformation($"[DEBUG] Tìm thêm {additionalMatches.Count} trường sau dấu phẩy");
-                        foreach (System.Text.RegularExpressions.Match m in additionalMatches)
-                        {
-                            allMatches.Add(m);
-                        }
-                    }
-
-                    foreach (var match in allMatches)
-                    {
-                        var templateFieldRaw = match.Groups[1].Value.Trim();
-                        templateFieldRaw = templateFieldRaw.TrimEnd(',', ';');
-
-                        var dots = match.Groups[2].Value;
-                        var unit = match.Groups[3].Value;
-
-                        if (string.IsNullOrWhiteSpace(templateFieldRaw) || templateFieldRaw.Length < 2)
-                        {
-                            continue;
-                        }
-
-                        var normalizedTemplateField = NormalizeText(templateFieldRaw);
-
-                        _logger.LogInformation($"[DEBUG]   Trường template: '{templateFieldRaw}' -> Normalized: '{normalizedTemplateField}' -> Unit: '{unit}'");
-
-                        if (normalizedDbMapping.TryGetValue(normalizedTemplateField, out var dbData))
-                        {
-                            var originalKey = dbData.OriginalKey;
-                            var data = dbData.Value;
-
-                            if (!string.IsNullOrWhiteSpace(data))
-                            {
-                                var formattedData = FormatDateIfNeeded(data);
-
-                                var escapedField = System.Text.RegularExpressions.Regex.Escape(templateFieldRaw);
-                                var replacePattern = string.IsNullOrWhiteSpace(unit)
-                                    ? $@"{escapedField}[\s:]*[.…/]+"
-                                    : $@"{escapedField}[\s:]*[.…/]+\s*{System.Text.RegularExpressions.Regex.Escape(unit)}";
-
-                                var replacement = string.IsNullOrWhiteSpace(unit)
-                                    ? $"{templateFieldRaw}: {formattedData}"
-                                    : $"{templateFieldRaw}: {formattedData} {unit}";
-
-                                var newText = System.Text.RegularExpressions.Regex.Replace(
-                                    text,
-                                    replacePattern,
-                                    replacement
-                                );
-
-                                if (newText != text)
-                                {
-                                    _logger.LogInformation($"[DEBUG]   Replace thành công: '{originalKey}' = '{formattedData}'");
-                                    _logger.LogInformation($"[DEBUG]     From: '{text}'");
-                                    _logger.LogInformation($"[DEBUG]     To: '{newText}'");
-
-                                    text = newText;
-                                    replacedCount++;
-                                    textChanged = true;
-                                }
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"[DEBUG]   Trường '{originalKey}' không có data -> Giữ nguyên dấu ...");
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogInformation($"[DEBUG]   Không tìm thấy data cho trường: '{normalizedTemplateField}'");
-                        }
-                    }
-                }
-
-                if (textChanged)
-                {
-                    textElement.Text = text;
-                }
-            }
-
-            _logger.LogInformation($"[DEBUG] ReplaceDotsWithData: Đã replace {replacedCount} lần");
+            return (startIndex, endIndex);
         }
-        private string FormatDateIfNeeded(string data)
+
+        private void CloneFieldsForBlock(Body body, List<FormTruongData> truongList, int cloneCount, string blockName)
         {
-            if (string.IsNullOrWhiteSpace(data)) return data;
-
-            // Kiểm tra format ISO date: YYYY-MM-DD hoặc YYYY-MM-DD HH:mm:ss
-            var isoDatePattern = @"^(\d{4})-(\d{2})-(\d{2})";
-            var match = System.Text.RegularExpressions.Regex.Match(data.Trim(), isoDatePattern);
-
-            if (match.Success)
+            if (cloneCount == 0 || !truongList.Any())
             {
-                var year = match.Groups[1].Value;
-                var month = match.Groups[2].Value;
-                var day = match.Groups[3].Value;
-
-                // Format lại thành DD/MM/YYYY
-                var formattedDate = $"{day}/{month}/{year}";
-
-                _logger.LogInformation($"[DEBUG] Format date: '{data}' -> '{formattedDate}'");
-
-                return formattedDate;
-            }
-
-            // Không phải date thì trả về nguyên bản
-            return data;
-        }
-        private void ReplaceTableData(Body body, Dictionary<string, List<string>> tableDataMapping)
-        {
-            if (!tableDataMapping.Any())
-            {
-                _logger.LogInformation($"[DEBUG] ReplaceTableData: Không có dữ liệu bảng nào");
                 return;
             }
 
-            var tables = body.Descendants<Table>().ToList();
-            _logger.LogInformation($"[DEBUG] ReplaceTableData: Tìm thấy {tables.Count} bảng trong document");
+            var allParagraphs = body.Elements<Paragraph>().ToList();
 
-            // Tạo normalized mapping
-            var normalizedMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kvp in tableDataMapping)
+            var (startIndex, endIndex) = GetBlockParagraphRange(allParagraphs, truongList);
+
+            if (startIndex == -1 || endIndex == -1)
             {
-                var normalizedKey = NormalizeText(kvp.Key);
-                if (!string.IsNullOrWhiteSpace(normalizedKey))
-                {
-                    normalizedMapping[normalizedKey] = kvp.Key;
-                }
+                return;
             }
 
-            int tableIndex = 0;
-            foreach (var table in tables)
+            var blockParagraphs = new List<Paragraph>();
+            for (int i = startIndex; i <= endIndex; i++)
             {
-                tableIndex++;
-                _logger.LogInformation($"[DEBUG] Đang xử lý bảng #{tableIndex}");
+                blockParagraphs.Add(allParagraphs[i]);
+            }
 
-                var rows = table.Elements<TableRow>().ToList();
-                _logger.LogInformation($"[DEBUG]   Bảng có {rows.Count} dòng");
+            var lastParagraph = blockParagraphs.Last();
 
-                if (rows.Count < 2)
+            for (int clone = 0; clone < cloneCount; clone++)
+            {
+                var insertAfter = lastParagraph;
+
+                foreach (var paragraph in blockParagraphs)
                 {
-                    _logger.LogInformation($"[DEBUG]   Bỏ qua bảng vì không đủ dòng (cần ít nhất 2 dòng)");
-                    continue;
+                    var clonedParagraph = (Paragraph)paragraph.CloneNode(true);
+                    body.InsertAfter(clonedParagraph, insertAfter);
+                    insertAfter = clonedParagraph;
                 }
 
-                // Row đầu tiên là header
-                var headerRow = rows[0];
-                var headerCells = headerRow.Elements<TableCell>().ToList();
-                _logger.LogInformation($"[DEBUG]   Header có {headerCells.Count} cột");
+                lastParagraph = insertAfter;
+            }
+        }
 
-                // Map index cột với TenTruong từ header (sử dụng normalized comparison)
-                var columnMapping = new Dictionary<int, string>();
-                for (int i = 0; i < headerCells.Count; i++)
+        private void ReplaceBlockTruongNhanBanData(Body body, List<FormData> formDataList,
+            List<FormTruongData> truongList, string blockName)
+        {
+            if (!truongList.Any())
+            {
+                return;
+            }
+
+            var truongIds = truongList.Select(x => x.Id).ToList();
+
+            var blockDataList = formDataList
+                .Where(x => truongIds.Contains(x.IdTruongData) && x.IndexRowTable.HasValue)
+                .GroupBy(x => x.IndexRowTable.Value)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            var allParagraphs = body.Elements<Paragraph>().ToList();
+
+            int totalBlocks = blockDataList.Any() ? blockDataList.Max(g => g.Key) : 1;
+
+            foreach (var group in blockDataList)
+            {
+                int indexRowTable = group.Key;
+
+                foreach (var formData in group)
                 {
-                    var headerText = string.Join(" ", headerCells[i].Descendants<Text>().Select(t => t.Text)).Trim();
-                    var normalizedHeader = NormalizeText(headerText);
+                    var truongData = truongList.FirstOrDefault(x => x.Id == formData.IdTruongData);
+                    if (truongData == null) continue;
 
-                    _logger.LogInformation($"[DEBUG]   Header cột {i}: '{headerText}' -> Normalized: '{normalizedHeader}'");
-
-                    // Tìm TenTruong match với header - so sánh CHỨA nhau (bi-directional)
-                    foreach (var kvp in normalizedMapping)
+                    string data = formData.Data;
+                    if (DateTime.TryParse(data, out DateTime dateValue))
                     {
-                        var normalizedKey = kvp.Key;
-                        var originalKey = kvp.Value;
-
-                        // Match nếu header chứa key HOẶC key chứa header
-                        // Ví dụ: header "Từ tháng/năm" sẽ match với key "Từ"
-                        // Hoặc: header "Họ và tên" sẽ match với key "Họ và tên khai sinh"
-                        if (normalizedHeader.Contains(normalizedKey, StringComparison.OrdinalIgnoreCase) ||
-                            normalizedKey.Contains(normalizedHeader, StringComparison.OrdinalIgnoreCase))
-                        {
-                            columnMapping[i] = originalKey; // Lưu original key
-                            _logger.LogInformation($"[DEBUG]   Mapped cột {i} với trường: '{originalKey}'");
-                            break;
-                        }
-                    }
-                }
-
-                if (!columnMapping.Any())
-                {
-                    _logger.LogInformation($"[DEBUG]   Bỏ qua bảng vì không tìm thấy cột nào khớp");
-                    continue;
-                }
-
-                _logger.LogInformation($"[DEBUG]   Tìm thấy {columnMapping.Count} cột có dữ liệu để replace");
-
-                // Tính số dòng data cần thiết (max của tất cả các column)
-                int maxDataRows = 0;
-                foreach (var colMapping in columnMapping)
-                {
-                    var tenTruong = colMapping.Value;
-                    if (tableDataMapping.TryGetValue(tenTruong, out var dataList))
-                    {
-                        maxDataRows = Math.Max(maxDataRows, dataList.Count);
-                    }
-                }
-
-                // Thêm dòng nếu cần (nếu DB có nhiều dòng hơn template)
-                int currentDataRows = rows.Count - 1; // Trừ header row
-                while (currentDataRows < maxDataRows)
-                {
-                    var newRow = new TableRow();
-
-                    // Copy properties từ row cuối cùng
-                    if (rows.Count > 1)
-                    {
-                        var lastRow = rows[rows.Count - 1];
-                        var lastRowProps = lastRow.GetFirstChild<TableRowProperties>();
-                        if (lastRowProps != null)
-                        {
-                            newRow.Append(lastRowProps.CloneNode(true));
-                        }
+                        data = dateValue.ToString("dd/MM/yyyy");
                     }
 
-                    // Tạo cells cho new row
-                    foreach (var headerCell in headerCells)
-                    {
-                        var newCell = new TableCell();
-
-                        // Copy cell properties
-                        var cellProps = headerCell.GetFirstChild<TableCellProperties>();
-                        if (cellProps != null)
-                        {
-                            newCell.Append(cellProps.CloneNode(true));
-                        }
-
-                        // Tạo empty paragraph với font size 12 (24 half-points)
-                        var paragraph = new Paragraph();
-                        var run = new Run();
-                        var runProperties = new RunProperties();
-                        runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-                        runProperties.Append(new FontSize { Val = "24" }); // 12pt = 24 half-points
-                        run.Append(runProperties);
-                        run.Append(new Text(""));
-                        paragraph.Append(run);
-                        newCell.Append(paragraph);
-
-                        newRow.Append(newCell);
-                    }
-
-                    table.Append(newRow);
-                    rows.Add(newRow);
-                    currentDataRows++;
-
-                    _logger.LogInformation($"[DEBUG]   Đã thêm dòng mới, tổng dòng data: {currentDataRows}");
+                    ReplaceFieldOccurrenceInBlock(allParagraphs, truongData.IndexInTemplate, data, indexRowTable, blockName);
                 }
+            }
+        }
 
-                // Replace data trong các data rows
-                int replacedCells = 0;
-                for (int rowIndex = 1; rowIndex < rows.Count; rowIndex++)
+        private void ReplaceFieldOccurrenceInBlock(List<Paragraph> paragraphs, int fieldIndex,
+            string data, int occurrence, string blockName)
+        {
+            if (string.IsNullOrEmpty(data)) return;
+
+            var fieldPattern = GetFieldPatternByIndex(fieldIndex);
+            if (string.IsNullOrEmpty(fieldPattern)) return;
+
+            int foundCount = 0;
+            bool replaced = false;
+
+            foreach (var paragraph in paragraphs)
+            {
+                if (replaced) break;
+
+                var fullText = paragraph.InnerText;
+                if (!fullText.Contains(fieldPattern)) continue;
+
+                foundCount++;
+
+                if (foundCount != occurrence) continue;
+
+                var runs = paragraph.Elements<Run>().ToList();
+
+                foreach (var run in runs)
                 {
-                    var dataRow = rows[rowIndex];
-                    var dataCells = dataRow.Elements<TableCell>().ToList();
+                    if (replaced) break;
 
-                    foreach (var colMapping in columnMapping)
+                    var textElement = run.Elements<Text>().FirstOrDefault();
+                    if (textElement == null) continue;
+
+                    string text = textElement.Text;
+                    if (!text.Contains(fieldPattern)) continue;
+
+                    int patternIndex = text.IndexOf(fieldPattern);
+                    int afterPatternIndex = patternIndex + fieldPattern.Length;
+
+                    if (afterPatternIndex >= text.Length) continue;
+
+                    var remainingText = text.Substring(afterPatternIndex);
+
+                    var dotsPattern = @"^[:\s]*(\.{2,}[\s/]*)+";
+                    var dotsMatch = System.Text.RegularExpressions.Regex.Match(remainingText, dotsPattern);
+
+                    if (dotsMatch.Success)
                     {
-                        var colIndex = colMapping.Key;
-                        var tenTruong = colMapping.Value;
+                        string beforePattern = text.Substring(0, afterPatternIndex);
+                        string afterAllDots = remainingText.Substring(dotsMatch.Length);
 
-                        if (colIndex >= dataCells.Count)
+                        afterAllDots = System.Text.RegularExpressions.Regex.Replace(
+                            afterAllDots,
+                            @"^[\s/\.]*(\.{2,}[\s/]*)*",
+                            ""
+                        );
+
+                        var trimmedAfter = afterAllDots.TrimStart();
+
+                        var units = new[] { "%", "m2", "m²", "kg", "cm", "vnđ", "đồng", "VNĐ" };
+                        bool isUnitCase = units.Any(unit => trimmedAfter.StartsWith(unit));
+
+                        string spacer;
+                        if (string.IsNullOrWhiteSpace(afterAllDots))
                         {
-                            _logger.LogWarning($"[DEBUG]   Row {rowIndex}, cột {colIndex} không tồn tại");
-                            continue;
+                            spacer = "";
                         }
-
-                        if (!tableDataMapping.TryGetValue(tenTruong, out var dataList))
+                        else if (isUnitCase)
                         {
-                            _logger.LogWarning($"[DEBUG]   Không tìm thấy data cho trường '{tenTruong}'");
-                            continue;
-                        }
+                            spacer = "";
 
-                        // IndexRowTable trong DB bắt đầu từ 1, List bắt đầu từ 0
-                        // Nhưng trong code build mapping đã convert rồi, nên dataIndex = rowIndex - 1 là đúng
-                        var dataIndex = rowIndex - 1;
-
-                        _logger.LogInformation($"[DEBUG]   Row {rowIndex} -> Đang lấy dataIndex {dataIndex} từ dataList có {dataList.Count} phần tử");
-
-                        if (dataIndex >= dataList.Count)
-                        {
-                            _logger.LogInformation($"[DEBUG]   Row {rowIndex}, dataIndex {dataIndex} vượt quá số dòng data ({dataList.Count})");
-                            continue;
-                        }
-
-                        var data = dataList[dataIndex];
-                        if (string.IsNullOrWhiteSpace(data))
-                        {
-                            _logger.LogInformation($"[DEBUG]   Row {rowIndex}, cột '{tenTruong}': data rỗng");
-                            continue;
-                        }
-
-                        // Replace text trong cell
-                        var cell = dataCells[colIndex];
-                        var cellTexts = cell.Descendants<Text>().ToList();
-
-                        if (cellTexts.Any())
-                        {
-                            // Clear existing text và set text mới
-                            cellTexts[0].Text = data;
-                            for (int i = 1; i < cellTexts.Count; i++)
+                            foreach (var unit in units)
                             {
-                                cellTexts[i].Text = "";
+                                if (trimmedAfter.StartsWith(unit))
+                                {
+                                    var unitPattern = $@"^(\s*){System.Text.RegularExpressions.Regex.Escape(unit)}(\s*)";
+                                    afterAllDots = System.Text.RegularExpressions.Regex.Replace(
+                                        afterAllDots,
+                                        unitPattern,
+                                        $"{unit}    "
+                                    );
+                                    break;
+                                }
                             }
-                            _logger.LogInformation($"[DEBUG]   Row {rowIndex}, cột '{tenTruong}': replaced = '{data}'");
-                            replacedCells++;
                         }
                         else
                         {
-                            // Tạo paragraph và text mới nếu cell rỗng - Font size 12
-                            var paragraph = new Paragraph();
-                            var run = new Run();
-                            var runProperties = new RunProperties();
-                            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-                            runProperties.Append(new FontSize { Val = "24" }); // 12pt = 24 half-points
-                            run.Append(runProperties);
-                            run.Append(new Text(data));
-                            paragraph.Append(run);
-                            cell.Append(paragraph);
-                            _logger.LogInformation($"[DEBUG]   Row {rowIndex}, cột '{tenTruong}': created new = '{data}'");
-                            replacedCells++;
+                            spacer = "    ";
                         }
+
+                        string newText = beforePattern + " " + data + spacer + afterAllDots;
+
+                        textElement.Text = newText;
+                        textElement.Space = SpaceProcessingModeValues.Preserve;
+                        EnsureRunFormatting(run);
+
+                        replaced = true;
                     }
                 }
-
-                _logger.LogInformation($"[DEBUG]   Đã replace {replacedCells} cells trong bảng #{tableIndex}");
             }
         }
+
+        private void ReplaceSpecialBirthdayField(Body body, DateTime dateValue)
+        {
+            foreach (var paragraph in body.Descendants<Paragraph>())
+            {
+                var fullText = paragraph.InnerText;
+                if (fullText.Contains("3) Sinh ngày:") && fullText.Contains("tháng") && fullText.Contains("năm"))
+                {
+                    var runs = paragraph.Elements<Run>().ToList();
+
+                    foreach (var run in runs)
+                    {
+                        var textElement = run.Elements<Text>().FirstOrDefault();
+                        if (textElement == null) continue;
+
+                        string text = textElement.Text;
+
+                        var pattern = @"(\.{2,})\s*tháng\s*(\.{2,})\s*năm\s*(\.{2,})";
+                        var regex = new System.Text.RegularExpressions.Regex(pattern);
+
+                        if (regex.IsMatch(text))
+                        {
+                            text = regex.Replace(text, $"{dateValue.Day:00} tháng {dateValue.Month:00} năm {dateValue.Year}", 1);
+                            textElement.Text = text;
+                            textElement.Space = SpaceProcessingModeValues.Preserve;
+                            EnsureRunFormatting(run);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        private void ReplaceFieldInDocument(Body body, int index, string data)
+        {
+            if (string.IsNullOrEmpty(data))
+                return;
+
+            var fieldPattern = GetFieldPatternByIndex(index);
+            if (string.IsNullOrEmpty(fieldPattern))
+                return;
+
+            bool replaced = false;
+
+            foreach (var paragraph in body.Descendants<Paragraph>())
+            {
+                if (replaced) break;
+
+                var fullText = paragraph.InnerText;
+
+                if (!fullText.Contains(fieldPattern))
+                    continue;
+
+                var runs = paragraph.Elements<Run>().ToList();
+
+                for (int i = 0; i < runs.Count; i++)
+                {
+                    if (replaced) break;
+
+                    var run = runs[i];
+                    var textElement = run.Elements<Text>().FirstOrDefault();
+                    if (textElement == null) continue;
+
+                    string text = textElement.Text;
+
+                    if (!text.Contains(fieldPattern))
+                        continue;
+
+                    int patternIndex = text.IndexOf(fieldPattern);
+                    int afterPatternIndex = patternIndex + fieldPattern.Length;
+
+                    if (afterPatternIndex >= text.Length)
+                        continue;
+
+                    var remainingText = text.Substring(afterPatternIndex);
+
+                    var dotsPattern = @"^[:\s]*(\.{2,}[\s/]*)+";
+                    var dotsMatch = System.Text.RegularExpressions.Regex.Match(remainingText, dotsPattern);
+
+                    if (dotsMatch.Success)
+                    {
+                        string beforePattern = text.Substring(0, afterPatternIndex);
+                        string afterAllDots = remainingText.Substring(dotsMatch.Length);
+
+                        afterAllDots = System.Text.RegularExpressions.Regex.Replace(
+                            afterAllDots,
+                            @"^[\s/\.]*(\.{2,}[\s/]*)*",
+                            ""
+                        );
+
+                        var trimmedAfter = afterAllDots.TrimStart();
+
+                        var units = new[] { "%", "m2", "m²", "kg", "cm", "vnđ", "đồng", "VNĐ" };
+                        bool isUnitCase = units.Any(unit => trimmedAfter.StartsWith(unit));
+
+                        string spacer;
+                        if (string.IsNullOrWhiteSpace(afterAllDots))
+                        {
+                            spacer = "";
+                        }
+                        else if (isUnitCase)
+                        {
+                            spacer = "";
+
+                            foreach (var unit in units)
+                            {
+                                if (trimmedAfter.StartsWith(unit))
+                                {
+                                    var unitPattern = $@"^(\s*){System.Text.RegularExpressions.Regex.Escape(unit)}(\s*)";
+                                    afterAllDots = System.Text.RegularExpressions.Regex.Replace(
+                                        afterAllDots,
+                                        unitPattern,
+                                        $"{unit}    "
+                                    );
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            spacer = "    ";
+                        }
+
+                        string newText;
+                        if (data.Length > 50)
+                        {
+                            newText = beforePattern + "\n" + data + spacer + afterAllDots;
+                        }
+                        else
+                        {
+                            newText = beforePattern + " " + data + spacer + afterAllDots;
+                        }
+
+                        textElement.Text = newText;
+                        textElement.Space = SpaceProcessingModeValues.Preserve;
+                        EnsureRunFormatting(run);
+
+                        replaced = true;
+                    }
+                }
+            }
+        }
+
+        private string GetFieldPatternByIndex(int index)
+        {
+            var patterns = new Dictionary<int, string>
+    {
+        { 1, "Cơ quan quản lý viên chức:" },
+        { 2, "Đơn vị sử dụng viên chức:" },
+        { 3, "Số hiệu:" },
+        { 4, "Mã số định danh:" },
+        { 5, "SƠ YẾU LÝ LỊCH" },
+        { 6, "1) Họ và tên khai sinh (viết chữ in hoa):" },
+        { 7, "Giới tính:" },
+        { 8, "2) Các tên gọi khác:" },
+        { 9, "3) Sinh ngày:" },
+        { 10, "4) Nơi sinh:" },
+        { 11, "5) Quê quán (xã, phường):" },
+        { 12, "tỉnh, TP):" },
+        { 13, "6) Dân tộc:" },
+        { 14, "7) Tôn giáo:" },
+        { 15, "8) Số CCCD:" },
+        { 16, "Ngày cấp:" },
+        { 17, "SĐT liên hệ:" },
+        { 18, "9) Số BHXH:" },
+        { 19, "Số thẻ BHYT:" },
+        { 20, "10) Nơi ở hiện nay:" },
+        { 21, "11) Thành phần gia đình xuất thân:" },
+        { 22, "12) Nghề nghiệp trước khi được tuyển dụng:" },
+        { 23, "13) Ngày được tuyển dụng lần đầu:" },
+        { 24, "Cơ quan, tổ chức, đơn vị tuyển dụng:" },
+        { 25, "14) Ngày vào cơ quan hiện đang công tác:" },
+        { 26, "15) Ngày vào Đảng Cộng sản Việt Nam:" },
+        { 27, "Ngày chính thức:" },
+        { 28, "16) Ngày tham gia tổ chức chính trị-xã hội đầu tiên" },
+        { 29, "17) Ngày nhập ngũ:" },
+        { 30, "Ngày xuất ngũ:" },
+        { 31, "Quân hàm cao nhất:" },
+        { 32, "18) Đối tượng chính sách:" },
+        { 33, "19) Trình độ giáo dục phổ thông" },
+        { 34, "20) Trình độ chuyên môn cao nhất:" },
+        { 35, "21) Học hàm:" },
+        { 36, "22) Danh hiệu nhà nước phong tặng:" },
+        { 37, "23) Chức vụ hiện tại:" },
+        { 38, "Ngày bổ nhiệm/ngày phê chuẩn:" },
+        { 39, "Ngày bổ nhiệm lại/phê chuẩn nhiệm kỳ tiếp theo:" },
+        { 40, "24) Được quy hoạch chức danh:" },
+        { 41, "25) Chức vụ kiêm nhiệm:" },
+        { 42, "26) Chức vụ Đảng hiện tại:" },
+        { 43, "27) Chức vụ Đảng kiêm nhiệm:" },
+        { 44, "28) Công việc chính được giao:" },
+        { 45, "29) Sở trường công tác:" },
+        { 46, "Công việc làm lâu nhất" },
+        { 47, "30) Tiền lương" },
+        { 48, "30.1) Ngạch/chức danh nghề nghiệp:" },
+        { 49, "Mã số:" },
+        { 50, "Ngày bổ nhiệm ngạch/chức danh nghề nghiệp:" },
+        { 51, "Bậc lương:" },
+        { 52, "Hệ số:" },
+        { 53, "Ngày hưởng:" },
+        { 54, "Phần trăm hưởng:" },
+        { 55, "Phụ cấp thâm niên vượt khung:" },
+        { 56, "Ngày hưởng PCTNVK:" },
+        { 57, "30.2) Phụ cấp chức vụ:" },
+        { 58, "Phụ cấp kiêm nhiệm" },
+        { 59, "Phụ cấp khác" },
+        { 60, "30.3) Vị trí việc làm:" },
+        { 61, "Mã số:" },
+        { 62, "Bậc lương" },
+        { 63, "Lương theo mức tiền:" },
+        { 64, "Ngày hưởng:" },
+        { 65, "Phần trăm hưởng:" },
+        { 66, "Ngày hưởng PCTNVK:" },
+        { 67, "Phụ cấp thâm niên vượt khung:" },
+        { 68, "31) Tình trạng sức khoẻ:" },
+        { 69, "Chiều cao:" },
+        { 70, "Cân nặng:" },
+        { 71, "Nhóm máu:" },
+        { 74, "Từ tháng/năm" },
+        { 75, "Đến tháng/năm" },
+        { 76, "Tên cơ sở đào tạo" },
+        { 77, "Chuyên ngành đào tạo" },
+        { 78, "Hình thức đào tạo" },
+        { 79, "Văn bằng, trình độ" },
+        { 81, "Từ tháng/năm" },
+        { 82, "Đến tháng/năm" },
+        { 83, "Tên cơ sở đào tạo" },
+        { 84, "Hình thức đào tạo" },
+        { 85, "Văn bằng được cấp" },
+        { 87, "Từ tháng/năm" },
+        { 88, "Đến tháng/năm" },
+        { 89, "Tên cơ sở đào tạo" },
+        { 90, "Chứng chỉ được cấp" },
+        { 92, "Từ tháng/năm" },
+        { 93, "Đến tháng/năm" },
+        { 94, "Tên cơ sở đào tạo" },
+        { 95, "Chứng chỉ được cấp" },
+        { 97, "Từ tháng/năm" },
+        { 98, "Đến tháng/năm" },
+        { 99, "Tên cơ sở đào tạo" },
+        { 100, "Chứng chỉ được cấp" },
+        { 102, "Từ tháng/năm" },
+        { 103, "Đến tháng/năm" },
+        { 104, "Tên cơ sở đào tạo" },
+        { 105, "Tên ngoại ngữ/ tiếng dân tộc" },
+        { 106, "Chứng chỉ được cấp" },
+        { 107, "Điểm số" },
+        { 109, "Từ tháng/năm" },
+        { 110, "Đến tháng/năm" },
+        { 111, "Đơn vị công tác" },
+        { 112, "Chức danh/ chức vụ" },
+        { 114, "34.1- Khai rõ:" },
+        { 116, "Từ tháng/năm" },
+        { 117, "Đến tháng/năm" },
+        { 118, "Chức danh, chức vụ, đơn vị, địa điểm đã làm việc" },
+        { 120, "Từ tháng/năm" },
+        { 121, "Đến tháng/năm" },
+        { 122, "Tên tổ chức, địa chỉ trụ sở, công việc đã làm" },
+        { 125, "Năm" },
+        { 126, "Xếp loại chuyên môn" },
+        { 127, "Xếp loại thi đua" },
+        { 128, "Hình thức khen thưởng" },
+        { 130, "Từ tháng/năm" },
+        { 131, "Đến tháng/năm" },
+        { 132, "Hình thức" },
+        { 133, "Hành vi vi phạm chính" },
+        { 134, "Cơ quan quyết định" },
+        { 137, "Mối quan hệ" },
+        { 138, "Họ và tên" },
+        { 139, "Năm sinh" },
+        { 140, "Quê quán, nghề nghiệp" },
+        { 142, "Mối quan hệ" },
+        { 143, "Họ và tên" },
+        { 144, "Năm sinh" },
+        { 145, "Quê quán, nghề nghiệp" },
+        { 148, "Từ tháng/năm" },
+        { 149, "Đến tháng/năm" },
+        { 150, "Mã số" },
+        { 151, "Bậc lương" },
+        { 152, "Hệ số lương" },
+        { 153, "Tiền lương theo vị trí việc làm" },
+        { 155, "Từ tháng/năm" },
+        { 156, "Đến tháng/năm" },
+        { 157, "Loại phụ cấp" },
+        { 158, "Phần trăm hưởng" },
+        { 159, "Hệ số" },
+        { 160, "Hình thức hưởng" },
+        { 161, "Giá trị (đồng)" },
+        { 163, "- Tiền lương:" },
+        { 164, "- Các nguồn khác:" },
+        { 165, "Nhà ở" },
+        { 166, "+ Được cấp, được thuê (loại nhà):" },
+        { 167, "tổng diện tích sử dụng:" },
+        { 168, "Giấy chứng nhận quyền sở hữu:" },
+        { 169, "+ Nhà tự mua, tự xây (loại nhà):" },
+        { 170, "tổng diện tích sử dụng:" },
+        { 171, "Giấy chứng nhận quyền sở hữu:" },
+        { 172, "Đất ở"},
+        { 173, "+ Đất được cấp:" },
+        { 174, "Giấy chứng nhận quyền sử dụng:" },
+        { 175, "+ Đất tự mua:" },
+        { 176, "Giấy chứng nhận quyền sử dụng:" },
+        { 177, "- Đất sản xuất kinh doanh:" },
+        { 179, "Nhận xét, đánh giá:" }
+    };
+
+            return patterns.ContainsKey(index) ? patterns[index] : null;
+        }
+
+        private void EnsureRunFormatting(Run run)
+        {
+            var runProps = run.RunProperties;
+            if (runProps == null)
+            {
+                runProps = new RunProperties();
+                run.InsertAt(runProps, 0);
+            }
+
+            var existingFont = runProps.Elements<RunFonts>().FirstOrDefault();
+            if (existingFont == null)
+            {
+                runProps.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
+            }
+            else
+            {
+                existingFont.Ascii = "Times New Roman";
+                existingFont.HighAnsi = "Times New Roman";
+            }
+
+            var existingSize = runProps.Elements<FontSize>().FirstOrDefault();
+            if (existingSize == null)
+            {
+                runProps.Append(new FontSize { Val = "24" });
+            }
+            else
+            {
+                existingSize.Val = "24";
+            }
+        }
+
+        private void ReplaceFieldInTable(Body body, int columnIndex, int rowIndex, string data, int itemId, Dictionary<int, int> itemToTableIndexMap)
+        {
+            if (string.IsNullOrEmpty(data))
+                return;
+
+            if (!itemToTableIndexMap.TryGetValue(itemId, out int tableIndex))
+            {
+                return;
+            }
+
+            var tables = body.Elements<WordTable>().ToList();
+
+            int tableArrayIndex = tableIndex;
+
+            if (tableArrayIndex >= tables.Count || tableArrayIndex < 0)
+            {
+                return;
+            }
+
+            var table = tables[tableArrayIndex];
+            var rows = table.Elements<TableRow>().ToList();
+            if (rows.Count == 0)
+            {
+                return;
+            }
+
+            var headerRow = rows[0];
+            var headerCells = headerRow.Elements<TableCell>().ToList();
+
+            int cellArrayIndex = columnIndex - 1;
+
+            if (cellArrayIndex >= headerCells.Count || cellArrayIndex < 0)
+            {
+                return;
+            }
+
+            int targetRowIndex = rowIndex;
+
+            while (rows.Count <= targetRowIndex)
+            {
+                var newRow = CreateTableRow(headerCells.Count);
+                table.Append(newRow);
+                rows = table.Elements<TableRow>().ToList();
+            }
+
+            var targetRow = rows[targetRowIndex];
+            var targetCells = targetRow.Elements<TableCell>().ToList();
+
+            if (cellArrayIndex < targetCells.Count)
+            {
+                var targetCell = targetCells[cellArrayIndex];
+
+                var cellProps = targetCell.GetFirstChild<TableCellProperties>();
+                if (cellProps == null)
+                {
+                    cellProps = new TableCellProperties();
+                    targetCell.InsertAt(cellProps, 0);
+                }
+
+                var verticalAlign = cellProps.GetFirstChild<TableCellVerticalAlignment>();
+                if (verticalAlign == null)
+                {
+                    cellProps.Append(new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center });
+                }
+
+                var paragraph = targetCell.Elements<Paragraph>().FirstOrDefault();
+
+                if (paragraph != null)
+                {
+                    paragraph.RemoveAllChildren<Run>();
+
+                    var paraProps = paragraph.GetFirstChild<ParagraphProperties>();
+                    if (paraProps == null)
+                    {
+                        paraProps = new ParagraphProperties();
+                        paragraph.InsertAt(paraProps, 0);
+                    }
+
+                    var justification = paraProps.GetFirstChild<Justification>();
+                    if (justification == null)
+                    {
+                        paraProps.Append(new Justification { Val = JustificationValues.Center });
+                    }
+                    else
+                    {
+                        justification.Val = JustificationValues.Center;
+                    }
+
+                    var run = new Run();
+                    var runProps = new RunProperties();
+                    runProps.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
+                    runProps.Append(new FontSize { Val = "24" });
+                    run.Append(runProps);
+                    run.Append(new Text(data) { Space = SpaceProcessingModeValues.Preserve });
+                    paragraph.Append(run);
+                }
+            }
+        }
+
+        private TableRow CreateTableRow(int columnCount)
+        {
+            var row = new TableRow();
+
+            for (int i = 0; i < columnCount; i++)
+            {
+                var cell = new TableCell();
+                var paragraph = new Paragraph();
+                var run = new Run();
+                var runProps = new RunProperties();
+                runProps.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
+                runProps.Append(new FontSize { Val = "24" });
+                run.Append(runProps);
+                run.Append(new Text(""));
+                paragraph.Append(run);
+                cell.Append(paragraph);
+                row.Append(cell);
+            }
+
+            return row;
+        }
+
         public byte[] GenerateSoYeuLyLichTemplate()
         {
             using var memoryStream = new MemoryStream();
@@ -678,7 +935,7 @@ namespace syll.be.lib.Form.Implements
 
         private void AddMainInfoSection(Body body)
         {
-            var table = new Table();
+            var table = new WordTable();
             var tableProperties = new TableProperties(
                 new TableBorders(
                     new TopBorder { Val = new EnumValue<BorderValues>(BorderValues.None), Size = 0 },
@@ -796,7 +1053,7 @@ namespace syll.be.lib.Form.Implements
             AddParagraph(body, "Phần trăm hưởng:....%; Phụ cấp thâm niên vượt khung:...%; Ngày hưởng PCTNVK:.../.../ ...", false, 24);
             AddParagraph(body, "30.2) Phụ cấp chức vụ: ............ Phụ cấp kiêm nhiệm .................... Phụ cấp khác.........", false, 24);
             AddParagraph(body, "30.3) Vị trí việc làm: ......................................................................... Mã số:.........", false, 24);
-            AddParagraph(body, "Bậc lương ........................... Lương theo mức tiền: .....................vnđ. Ngày hưởng: ...../...../.", false, 24);
+            AddParagraph(body, "Bậc lương: ........................... Lương theo mức tiền: .....................vnđ. Ngày hưởng: ...../...../.", false, 24);
             AddParagraph(body, "Phần trăm hưởng:...%; Phụ cấp thâm niên vượt khung:..%; Ngày hưởng PCTNVK: ...../..../...", false, 24);
         }
 
@@ -832,7 +1089,7 @@ namespace syll.be.lib.Form.Implements
         private void AddWorkHistorySection(Body body)
         {
             AddParagraph(body, "33) TÓM TẮT QUÁ TRÌNH CÔNG TÁC", true, 24, JustificationValues.Center);
-            AddTableWithHeaders(body, new[] { "Tháng/\nnăm\nTừ", "Tháng/\nnăm\nĐến", "Đơn vị công tác (đảng, chính quyền,\n\nđoàn thể, tổ chức xã hội)", "Chức danh/\nchức vụ" }, 3);
+            AddTableWithHeaders(body, new[] { "Từ tháng/năm", "Đến tháng/năm", "Đơn vị công tác (đảng, chính quyền,\n\nđoàn thể, tổ chức xã hội)", "Chức danh/\nchức vụ" }, 3);
         }
 
         private void AddPersonalHistorySection(Body body)
@@ -841,7 +1098,7 @@ namespace syll.be.lib.Form.Implements
             AddParagraph(body, "34.1- Khai rõ: bị bắt, bị tù (từ ngày tháng năm nào đến ngày tháng năm nào, ở đâu?), đã khai báo cho ai, những vấn đề gì?: .....................................................................", false, 24);
 
             AddParagraph(body, "34.2- Bản thân có làm việc cho chế độ cũ", false, 24);
-            AddTableWithHeaders(body, new[] { "Tháng/\nnăm\nTừ", "Tháng/\nnăm\nĐến", "Chức danh, chức vụ, đơn vị, địa điểm đã làm việc" }, 3);
+            AddTableWithHeaders(body, new[] { "Từ tháng/năm", "Đến tháng/năm", "Chức danh, chức vụ, đơn vị, địa điểm đã làm việc" }, 3);
 
             AddParagraph(body, "34.3-Tham gia hoặc có quan hệ với các tổ chức chính trị, kinh tế, xã hội ... ở nước ngoài", false, 24);
             AddTableWithHeaders(body, new[] { "Từ tháng/năm", "Đến tháng/năm", "Tên tổ chức, địa chỉ trụ sở, công việc đã làm" }, 3);
@@ -899,10 +1156,10 @@ namespace syll.be.lib.Form.Implements
         {
             AddParagraph(body, "38) NHẬN XÉT, ĐÁNH GIÁ CỦA CƠ QUAN, TỔ CHỨC, ĐƠN VỊ SỬ DỤNG", true, 24, JustificationValues.Center);
             //AddParagraph(body, "Nhận xét, đánh giá", true, 24, JustificationValues.Center);
-            AddParagraph(body, "Nhận xét, đánh giá \n ................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................", false, 24);
+            AddParagraph(body, "Nhận xét, đánh giá: \n ................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................", false, 24);
             AddParagraph(body, "", false, 24);
 
-            var table = new Table();
+            var table = new WordTable();
             var tableProperties = new TableProperties(
                 new TableBorders(
                     new TopBorder { Val = new EnumValue<BorderValues>(BorderValues.None), Size = 0 },
@@ -973,7 +1230,7 @@ namespace syll.be.lib.Form.Implements
 
         private void AddTableWithHeaders(Body body, string[] headers, int dataRows)
         {
-            var table = new Table();
+            var table = new WordTable();
             var tableProperties = new TableProperties(
                 new TableBorders(
                     new TopBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
@@ -1012,31 +1269,6 @@ namespace syll.be.lib.Form.Implements
             AddParagraph(body, "", false, 24);
         }
 
-        private string NormalizeText(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return "";
-
-            // Loại bỏ xuống dòng, tab, khoảng trắng thừa
-            text = System.Text.RegularExpressions.Regex.Replace(text, @"[\r\n\t]+", " ");
-            text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ");
-
-            // Loại bỏ prefix dạng "số.số-" hoặc "số-" ở đầu (ví dụ: "0.1-", "30.1-", "32.1)")
-            text = System.Text.RegularExpressions.Regex.Replace(text, @"^\d+\.?\d*[\-\)]\s*", "");
-
-            // Xử lý trường hợp đặc biệt: "Sinh ngày ... tháng ... năm" -> "Sinh ngày/tháng/năm"
-            text = System.Text.RegularExpressions.Regex.Replace(
-                text,
-                @"Sinh\s+ngày[:\s.]*tháng[:\s.]*năm",
-                "Sinh ngày/tháng/năm",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase
-            );
-
-            // Loại bỏ dấu hai chấm và tất cả các ký tự phía sau (dấu chấm, khoảng trắng...)
-            // Ví dụ: "Giới tính:........." -> "Giới tính"
-            // Ví dụ: "Dân tộc:........" -> "Dân tộc"
-            text = System.Text.RegularExpressions.Regex.Replace(text, @"[:.\s]+$", "");
-
-            return text.Trim();
-        }
+        
     }
 }

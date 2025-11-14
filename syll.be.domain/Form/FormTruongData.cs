@@ -28,6 +28,9 @@ namespace syll.be.domain.Form
         public string TenTruong { get; set; } = string.Empty;
         //public int Order { get; set; }
         //public bool IsShow { get; set; }
+        public int IndexInTemplate { get; set; }
+        //public bool IsTruongCustom { get; set; }
+        public int BlockTruongNhanBan {  get; set; }
         public string Type { get; set; } = "string";
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }

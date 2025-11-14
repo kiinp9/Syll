@@ -6,6 +6,16 @@ export interface IViewFormLayout {
 	class?: string;
 	style?: string;
 	items?: IViewFormBlock[];
+	truongCustoms?: ITruongCustom[];
+}
+export interface ITruongCustom{
+	id?: number;
+	tenTruong?: string;
+	type?: string;
+	blockTruongNhanBan? :number;
+	class?: string;
+	style?: string;
+	item: IViewItemData;
 }
 
 export interface IViewFormBlock {
@@ -19,6 +29,7 @@ export interface IViewFormBlock {
 export interface IViewFormRow {
 	id?: number;
 	order?: number;
+	showNutCustom?: boolean;
 	class?: string;
 	style?: string;
 	items: IViewFormItem[];
@@ -40,6 +51,7 @@ export interface IViewItemTruongData {
 	id?: number;
 	tenTruong?: string;
 	type?: string;
+	blockTruongNhanBan? :number;
 	class?: string;
 	style?: string;
 	item: IViewItemData;
