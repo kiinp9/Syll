@@ -163,7 +163,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		{#each page as block, blockIdx (block.id)}
 			<div
-				class="w-full h-2.5"
+				class="w-full h-5 hover:border-amber-300 hover:rounded-sm"
 				ondragover={allowDrop}
 				data-index={blockIdx}
 				ondrop={handleDropBlock}
@@ -208,7 +208,7 @@
 			</div>
 		{/each}
 		<div
-			class="w-full h-2.5"
+			class="w-full h-5 hover:border-amber-300 hover:rounded-sm"
 			ondragover={allowDrop}
 			data-index={page.length}
 			ondrop={handleDropBlock}

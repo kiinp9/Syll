@@ -6,4 +6,5 @@ export const ENDPOINTS = {
     updateFormContent: (idForm: number) => `/api/core/form/${idForm}/form-content`,
     deleteRowTableData: '/api/core/form/row-table',
     downloadForm : (idForm: number) => `/api/core/form-template/form-loai/${idForm}/replace`,
+    createForm: '/api/core/form'
 }
