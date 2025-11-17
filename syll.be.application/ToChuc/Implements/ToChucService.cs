@@ -100,13 +100,28 @@ namespace syll.be.application.ToChuc.Implements
             _logger.LogInformation($"{nameof(Find)}  dto={JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
             var isSuperAdmin = IsSuperAdmin();
+
             var query = from tc in _syllDbContext.ToChucs
                         where !tc.Deleted
                         && (isSuperAdmin || tc.CreatedBy == currentUserId)
                         orderby tc.CreatedDate descending
                         select tc;
+
             var data = query.Paging(dto).ToList();
             var items = _mapper.Map<List<ViewToChucDto>>(data);
+
+            var toChucIds = items.Select(x => x.Id).ToList();
+            var employeeCounts = _syllDbContext.ToChucDanhBa
+                .Where(x => toChucIds.Contains(x.IdToChuc) && !x.Deleted)
+                .GroupBy(x => x.IdToChuc)
+                .Select(g => new { IdToChuc = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.IdToChuc, x => x.Count);
+
+            foreach (var item in items)
+            {
+                item.SoNhanVien = employeeCounts.GetValueOrDefault(item.Id, 0);
+            }
+
             return new BaseResponsePagingDto<ViewToChucDto>
             {
                 Items = items,

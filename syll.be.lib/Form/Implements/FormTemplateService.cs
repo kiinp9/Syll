@@ -17,6 +17,9 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using syll.be.shared.HttpRequest.AppException;
+using syll.be.shared.HttpRequest.Error;
+using syll.be.infrastructure.data.Migrations;
 
 namespace syll.be.lib.Form.Implements
 {
@@ -35,6 +38,9 @@ namespace syll.be.lib.Form.Implements
 
         public async Task<byte[]> ReplaceWordFormTemplate(int idFormLoai)
         {
+            _logger.LogInformation($"{nameof(ReplaceWordFormTemplate)} idFormLoai = {idFormLoai}");
+            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
             var idDanhBa = await GetCurrentDanhBaId();
 
             var formDataList = await _syllDbContext.FormDatas
@@ -44,7 +50,7 @@ namespace syll.be.lib.Form.Implements
             var truongDataIds = formDataList.Select(x => x.IdTruongData).Distinct().ToList();
 
             var formTruongDataList = await _syllDbContext.FormTruongDatas
-                .Where(x => truongDataIds.Contains(x.Id) && !x.Deleted)
+                .Where(x => truongDataIds.Contains(x.Id) && x.IdFormLoai == idFormLoai  && !x.Deleted)
                 .ToListAsync();
 
             var truongNhaOList = formTruongDataList
@@ -59,8 +65,12 @@ namespace syll.be.lib.Form.Implements
 
             int cloneCountNhaO = CalculateCloneCount(formDataList, truongNhaOList);
             int cloneCountDatO = CalculateCloneCount(formDataList, truongDatOList);
-
-            var templateBytes = GenerateSoYeuLyLichTemplate();
+            //idFormLoai = 1;
+            if (idFormLoai != 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.TemplateErrorTemplateFormLoaiNotFound);
+            }
+            var templateBytes = GenerateSoYeuLyLichTemplate(idFormLoai);
 
             using var memoryStream = new MemoryStream();
             memoryStream.Write(templateBytes, 0, templateBytes.Length);
@@ -855,8 +865,15 @@ namespace syll.be.lib.Form.Implements
             return row;
         }
 
-        public byte[] GenerateSoYeuLyLichTemplate()
+        public byte[] GenerateSoYeuLyLichTemplate(int idFormLoai)
         {
+            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
+              ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+            //idFormLoai = 1;
+            if(idFormLoai != 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.TemplateErrorTemplateFormLoaiNotFound);
+            }
             using var memoryStream = new MemoryStream();
 
             using (var document = WordprocessingDocument.Create(memoryStream, WordprocessingDocumentType.Document, true))

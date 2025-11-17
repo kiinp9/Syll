@@ -10,7 +10,9 @@ namespace syll.be.application.ToChuc.Dtos
     {
         public int Id { get; set; }
         public string TenToChuc { get; set; } = String.Empty;
+
         public string MoTa { get; set; } = String.Empty;
+        public int SoNhanVien { get; set; }
         public int LoaiToChuc { get; set; }
         public string? MaSoToChuc { get; set; }
     }

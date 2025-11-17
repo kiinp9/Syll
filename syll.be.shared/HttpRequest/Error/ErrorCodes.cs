@@ -47,6 +47,8 @@ namespace syll.be.shared.HttpRequest.Error
         public const int FormLoaiErrorLayoutOrderInvalid = 512;
         public const int FormLoaiErrorTruongDataNotFound = 513;
 
+        public const int TemplateErrorTemplateFormLoaiNotFound = 601;
+
     }
 
 }

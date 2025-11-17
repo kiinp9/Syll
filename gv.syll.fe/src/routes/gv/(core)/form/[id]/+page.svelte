@@ -160,39 +160,41 @@
 	});
 
 	function handleThemDong(block: any, rowIndex: number) {
-	const currentRow = block.items[rowIndex];
-	if (!currentRow.showNutCustom) return;
+	    const currentRow = block.items[rowIndex];
+	    if (!currentRow.showNutCustom)
+		    return;
 
-	const blockTruongNhanBan = currentRow.items[0]?.items?.[0]?.blockTruongNhanBan;
-	if (!blockTruongNhanBan) return;
+	    const blockTruongNhanBan = currentRow.items[0]?.items?.[0]?.blockTruongNhanBan;
+	    if (!blockTruongNhanBan) 
+		    return;
 
-	const rowsToClone: any[] = [];
+	    const rowsToClone: any[] = [];
 
-	let startIdx = rowIndex;
-	while (startIdx > 0) {
-		const prevRow = block.items[startIdx - 1];
+	    let startIdx = rowIndex;
+	    while (startIdx > 0) {
+		    const prevRow = block.items[startIdx - 1];
 
-		if (prevRow.showNutCustom) break;
+		    if (prevRow.showNutCustom) break;
 
-		const belongsToBlock = prevRow.items.some((item: any) =>
-			item.items?.some((truong: any) => truong.blockTruongNhanBan === blockTruongNhanBan)
-		);
-		if (!belongsToBlock) break;
+		    const belongsToBlock = prevRow.items.some((item: any) =>
+			    item.items?.some((truong: any) => truong.blockTruongNhanBan === blockTruongNhanBan)
+		    );
+		    if (!belongsToBlock) break;
 
-		startIdx--;
-	}
+		    startIdx--;
+	    }
 
-	for (let i = startIdx; i <= rowIndex; i++) {
-		rowsToClone.push(block.items[i]);
-	}
+	    for (let i = startIdx; i <= rowIndex; i++) {
+		    rowsToClone.push(block.items[i]);
+     	}
 
-	const clonedRows = rowsToClone.map((row: any) => ({
-		...row,
-		id: Math.random() * -1000000,
-		showNutCustom: row.showNutCustom,
-		items: row.items.map((item: any) => ({
-			...item,
-			id: Math.random() * -1000000,
+	    const clonedRows = rowsToClone.map((row: any) => ({
+		    ...row,
+		    id: Math.random() * -1000000,
+	    	showNutCustom: row.showNutCustom,
+		    items: row.items.map((item: any) => ({
+			    ...item,
+			    id: Math.random() * -1000000,
 			items: item.items?.map((truong: any) => ({
 				...truong,
 				item: {
@@ -202,12 +204,12 @@
 				}
 			})),
 			headers: item.headers
-		}))
-	}));
+		    }))
+	    }));
 
-	block.items.splice(rowIndex + 1, 0, ...clonedRows);
-	formLayoutData = formLayoutData;
-}
+	    block.items.splice(rowIndex + 1, 0, ...clonedRows);
+	    formLayoutData = formLayoutData;
+    }
 	async function handleDeleteRow(item: any, rowIndex: number) {
 		const startIdx = rowIndex * item.headers!.length;
 		const rowCells = item.items!.slice(startIdx, startIdx + item.headers!.length);
@@ -230,60 +232,64 @@
 		}
 	}
 	async function handleDeleteBlock(block: any, rowIndex: number) {
-    const currentRow = block.items[rowIndex];
-    if (!currentRow.showNutCustom) return;
+        const currentRow = block.items[rowIndex];
+        if (!currentRow.showNutCustom) 
+		    return;
 
-    const blockTruongNhanBan = currentRow.items[0]?.items?.[0]?.blockTruongNhanBan;
-    if (!blockTruongNhanBan) return;
+        const blockTruongNhanBan = currentRow.items[0]?.items?.[0]?.blockTruongNhanBan;
+        if (!blockTruongNhanBan) 
+		    return;
 
-    const rowsToDelete: any[] = [];
+        const rowsToDelete: any[] = [];
 
-    let startIdx = rowIndex;
-    while (startIdx > 0) {
-        const prevRow = block.items[startIdx - 1];
-        if (prevRow.showNutCustom) break;
+        let startIdx = rowIndex;
+        while (startIdx > 0) {
+            const prevRow = block.items[startIdx - 1];
+            if (prevRow.showNutCustom) 
+			break;
 
-        const belongsToBlock = prevRow.items.some((item: any) =>
-            item.items?.some((truong: any) => truong.blockTruongNhanBan === blockTruongNhanBan)
-        );
-        if (!belongsToBlock) break;
+            const belongsToBlock = prevRow.items.some((item: any) =>
+                item.items?.some((truong: any) => truong.blockTruongNhanBan === blockTruongNhanBan)
+            );
+            if (!belongsToBlock) 
+			break;
 
-        startIdx--;
-    }
+            startIdx--;
+        }
 
-    for (let i = startIdx; i <= rowIndex; i++) {
-        rowsToDelete.push(block.items[i]);
-    }
+        for (let i = startIdx; i <= rowIndex; i++) {
+            rowsToDelete.push(block.items[i]);
+        }
 
-    const formData = new FormData();
-    let hasData = false;
+        const formData = new FormData();
+        let hasData = false;
 
-    rowsToDelete.forEach((row: any) => {
-        row.items.forEach((item: any) => {
-            item.items?.forEach((truong: any) => {
-                if (truong.item?.id && truong.item.id > 0) {
-                    formData.append(`${truong.id}_${truong.item.id}`, '');
-                    hasData = true;
-                }
+        rowsToDelete.forEach((row: any) => {
+            row.items.forEach((item: any) => {
+                item.items?.forEach((truong: any) => {
+                    if (truong.item?.id && truong.item.id > 0) {
+                        formData.append(`${truong.id}_${truong.item.id}`, '');
+                        hasData = true;
+                    } 
+                });
             });
         });
-    });
 
-    if (hasData) {
-        const response = await fetch('?/deleteBlock', {
-            method: 'POST',  
-            body: formData
-        });
+        if (hasData) {
+           const response = await fetch('?/deleteBlock', {
+                method: 'POST',  
+                body: formData
+            });
 
         if (!response.ok) {
             console.error('Failed to delete block');
             return;
+            }
         }
-    }
 
-    block.items.splice(startIdx, rowsToDelete.length);
-    formLayoutData = formLayoutData;
-}
+        block.items.splice(startIdx, rowsToDelete.length);
+        formLayoutData = formLayoutData;
+    }
 
 	async function handleDownloadForm() {
         try {

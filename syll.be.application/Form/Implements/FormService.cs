@@ -70,15 +70,44 @@ namespace syll.be.application.Form.Implements
 
         }
 
-        public BaseResponsePagingDto<ViewFormLoaiDto> Find(FindPagingFormLoaiDto dto)
+        public async Task<BaseResponsePagingDto<ViewFormLoaiDto>> Find(FindPagingFormLoaiDto dto)
         {
+            var currentUserId = await GetCurrentDanhBaId();
             _logger.LogInformation($"{nameof(Find)}  dto={JsonSerializer.Serialize(dto)}");
+
             var query = from fl in _syllDbContext.FormLoais
-                        where fl.Deleted == false
+                        where !fl.Deleted
                         orderby fl.CreatedDate descending
                         select fl;
+
             var data = query.Paging(dto).ToList();
             var items = _mapper.Map<List<ViewFormLoaiDto>>(data);
+
+     
+            var formLoaiIds = items.Select(x => x.Id).ToList();
+            var truongCounts = _syllDbContext.FormTruongDatas
+                .Where(x => formLoaiIds.Contains(x.IdFormLoai) && x.TruongCanNhap == true && !x.Deleted)
+                .GroupBy(x => x.IdFormLoai)
+                .Select(g => new { IdFormLoai = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.IdFormLoai, x => x.Count);
+
+            
+            var lastModifiedDates = _syllDbContext.FormDatas
+                .Where(x => formLoaiIds.Contains(x.IdFormLoai) && !x.Deleted && x.IdDanhBa == currentUserId)
+                .GroupBy(x => x.IdFormLoai)
+                .Select(g => new
+                {
+                    IdFormLoai = g.Key,
+                    LastModified = g.Max(x => x.ModifiedDate)
+                })
+                .ToDictionary(x => x.IdFormLoai, x => x.LastModified);
+
+            foreach (var item in items)
+            {
+                item.TongSoTruong = truongCounts.GetValueOrDefault(item.Id, 0);
+                item.ThoiGianCapNhatGanNhat = lastModifiedDates.GetValueOrDefault(item.Id);
+            }
+
             return new BaseResponsePagingDto<ViewFormLoaiDto>
             {
                 Items = items,

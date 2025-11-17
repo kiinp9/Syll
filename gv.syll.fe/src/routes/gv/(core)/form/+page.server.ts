@@ -11,6 +11,7 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	});
 	const endpoint = `${API_BASE_URL}${ENDPOINTS.getFormPaging}?` + params;
     console.log('LOAD DATA: ', endpoint);
+
     
 	const res = await fetch(endpoint, {
         method: 'GET'
@@ -23,10 +24,14 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 	}
 
 	const data: IBaseResponsePaging<IViewForm> = await res.json();
+	//console.log('data: ', data)
 
 	if (data.status === 1) {
+		//console.log('data.item: ', data.data.items)
 		return { data: data.data.items };
+		
 	}
+
 
 	return { data: [] };
 };

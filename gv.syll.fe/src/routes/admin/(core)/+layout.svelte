@@ -35,7 +35,7 @@
 				icon: BellIcon
 			},
 			{
-				url: '#',
+				url: '/admin/organization',
 				title: 'Tổ chức',
 				icon: UsersIcon
 			},

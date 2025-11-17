@@ -31,6 +31,7 @@ namespace syll.be.domain.Form
         public int IndexInTemplate { get; set; }
         //public bool IsTruongCustom { get; set; }
         public int BlockTruongNhanBan {  get; set; }
+        public bool TruongCanNhap {get; set; }
         public string Type { get; set; } = "string";
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }

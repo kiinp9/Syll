@@ -9,8 +9,15 @@ export const POST: RequestHandler = async ({ fetch, params }) => {
 		method: 'POST'
 	});
 
-	if (!res.ok) {
+	/*if (!res.ok) {
 		throw error(500, 'Có sự cố xảy ra khi tải file');
+	}*/
+
+	const contentType = res.headers.get('Content-Type');
+	
+	if (contentType?.includes('application/json')) {
+		const errorData = await res.json();
+		throw error( 500, errorData.message);
 	}
 
 	const blob = await res.blob();

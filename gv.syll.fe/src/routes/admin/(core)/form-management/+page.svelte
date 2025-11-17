@@ -58,10 +58,13 @@
 				<CardContent>
 					<div class="space-y-4">
 						<div class="text-sm text-gray-600">
-							<p><strong>Tổng số trường:</strong> 1</p>
+							<p><strong>Tổng số trường:</strong> {form.tongSoTruong}</p>
 							<p class="mt-1">
 								<strong>Lần cập nhật gần nhất:</strong>
-								{new Date().toLocaleDateString('en-GB')}
+						        {form.thoiGianCapNhatGanNhat
+						        ? new Date(form.thoiGianCapNhatGanNhat).toLocaleDateString('vi-VN')
+						        : 'Chưa cập nhật'
+						    }
 							</p>
 						</div>
 					</div>

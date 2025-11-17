@@ -64,11 +64,11 @@ namespace syll.be.Controllers.Form
 
         //[Permission(PermissionKeys.FormView)]
         [HttpGet("")]
-        public ApiResponse Find([FromQuery] FindPagingFormLoaiDto dto)
+        public async Task<ApiResponse> Find([FromQuery] FindPagingFormLoaiDto dto)
         {
             try
             {
-                var result = _formService.Find(dto);
+                var result = await _formService.Find(dto);
                 return new(result);
             }
             catch (Exception ex)

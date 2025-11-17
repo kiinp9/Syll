@@ -41,11 +41,11 @@ namespace syll.be.Controllers.Form
 
 
         [HttpPost("generate")]
-        public async Task<IActionResult> GenerateSoYeuLyLichTemplate()
+        public async Task<IActionResult> GenerateSoYeuLyLichTemplate([FromRoute] int idFormLoai)
         {
             try
             {
-                var templateBytes = _formTemplateService.GenerateSoYeuLyLichTemplate();
+                var templateBytes = _formTemplateService.GenerateSoYeuLyLichTemplate(idFormLoai);
 
                 return File(
                     templateBytes,

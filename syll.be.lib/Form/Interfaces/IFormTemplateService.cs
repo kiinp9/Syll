@@ -8,7 +8,7 @@ namespace syll.be.lib.Form.Interfaces
 {
     public interface IFormTemplateService
     {
-        public  Task<byte[]> ReplaceWordFormTemplate(int idFormLoai);
-       public byte[] GenerateSoYeuLyLichTemplate();
+       public  Task<byte[]> ReplaceWordFormTemplate(int idFormLoai);
+       public byte[] GenerateSoYeuLyLichTemplate(int idFormLoai);
     }
 }

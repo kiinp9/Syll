@@ -12,7 +12,7 @@ namespace syll.be.application.Form.Interfaces
     {
         public void Create(CreateFormLoaiDto dto);
         public void Update(UpdateFormLoaiDto dto);
-        public BaseResponsePagingDto<ViewFormLoaiDto> Find(FindPagingFormLoaiDto dto);
+        public Task<BaseResponsePagingDto<ViewFormLoaiDto>> Find(FindPagingFormLoaiDto dto);
         public ViewFormLoaiDto GetFormLoaiById(int id);
         public void Delete(int id);
 
