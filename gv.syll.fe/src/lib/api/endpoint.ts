@@ -7,5 +7,7 @@ export const ENDPOINTS = {
     deleteRowTableData: '/api/core/form/row-table',
     downloadForm : (idForm: number) => `/api/core/form-template/form-loai/${idForm}/replace`,
     createForm: '/api/core/form',
-    getToChucPaging :'/api/core/to-chuc'
+    getToChucPaging :'/api/core/to-chuc',
+    createToChuc : '/api/core/to-chuc',
+    deleteToChuc : (idToChuc: number) => `/api/core/to-chuc/${idToChuc}`,
 }

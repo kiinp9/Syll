@@ -12,3 +12,11 @@ export interface IGetListToChucDropDown{
     id?: number;
     tenToChuc?: string;
 }
+
+
+export interface ICreateToChuc {
+    tenToChuc ?: string;
+    moTa?: string;
+    loaiToChuc?: number;
+    maSoToChuc? : string;
+}

@@ -45,10 +45,23 @@ namespace syll.be.application.ToChuc.Implements
             var isSuperAdmin = IsSuperAdmin();
             _logger.LogInformation($"{nameof(Create)}  dto = {JsonSerializer.Serialize(dto)}");
             var vietnamNow = GetVietnamTime();
+
             if (dto.LoaiToChuc != ToChucConstants.DaiHocCongLap && dto.LoaiToChuc != ToChucConstants.PhongBan && dto.LoaiToChuc != ToChucConstants.KhoaDaoTao)
             {
                 throw new UserFriendlyException(ErrorCodes.ToChucErrorLoaiToChucNotFound);
             }
+
+            var toChucExist = _syllDbContext.ToChucs
+                          .Where(tc => tc.Deleted == false
+                                    && (isSuperAdmin || tc.CreatedBy == currentUserId)
+                                    && (tc.MaSoToChuc == dto.MaSoToChuc || tc.TenToChuc == dto.TenToChuc))
+                          .Any();
+
+            if (toChucExist)
+            {
+                throw new UserFriendlyException(ErrorCodes.ToChucErrorToChucExisted);
+            }
+
             var toChuc = new domain.ToChuc.ToChuc
             {
                 TenToChuc = dto.TenToChuc,
@@ -58,8 +71,8 @@ namespace syll.be.application.ToChuc.Implements
                 CreatedBy = currentUserId,
                 CreatedDate = vietnamNow,
                 Deleted = false,
-
             };
+
             _syllDbContext.ToChucs.Add(toChuc);
             _syllDbContext.SaveChanges();
         }
@@ -85,13 +98,29 @@ namespace syll.be.application.ToChuc.Implements
         public void Delete(int idToChuc)
         {
             _logger.LogInformation($"{nameof(Delete)}");
+
             var vietnamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
             var isSuperAdmin = IsSuperAdmin();
+
             var existingToChuc = _syllDbContext.ToChucs.FirstOrDefault(x => x.Id == idToChuc && (isSuperAdmin || x.CreatedBy == currentUserId) && !x.Deleted)
-                  ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+                ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+
+            var toChucDanhBa = _syllDbContext.ToChucDanhBa
+                .Where(x => x.IdToChuc == idToChuc && !x.Deleted)
+                .ToList();
+
+            foreach (var item in toChucDanhBa)
+            {
+                item.Deleted = true;
+                item.DeletedDate = vietnamNow;
+                item.DeletedBy = currentUserId;
+            }
+
             existingToChuc.Deleted = true;
             existingToChuc.DeletedDate = vietnamNow;
+            existingToChuc.DeletedBy = currentUserId;
+
             _syllDbContext.ToChucs.Update(existingToChuc);
             _syllDbContext.SaveChanges();
         }
@@ -104,7 +133,7 @@ namespace syll.be.application.ToChuc.Implements
             var query = from tc in _syllDbContext.ToChucs
                         where !tc.Deleted
                         && (isSuperAdmin || tc.CreatedBy == currentUserId)
-                        orderby tc.CreatedDate descending
+                        orderby tc.Id 
                         select tc;
 
             var data = query.Paging(dto).ToList();

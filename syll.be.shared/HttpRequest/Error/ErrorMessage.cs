@@ -40,7 +40,8 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.FormLoaiErrorItemTypeInvalid,"Loại item không hợp lệ" },
             { ErrorCodes.FormLoaiErrorLayoutOrderInvalid,"Thứ tự layout không hợp lệ" },
             { ErrorCodes.FormLoaiErrorTruongDataNotFound,"Trường data không tồn tại" },
-            { ErrorCodes.TemplateErrorTemplateFormLoaiNotFound,"Template Form chưa được thiết lập. Vui lòng liên hệ admin" }
+            { ErrorCodes.TemplateErrorTemplateFormLoaiNotFound,"Template Form chưa được thiết lập. Vui lòng liên hệ admin" },
+            { ErrorCodes.ToChucErrorToChucExisted, "Tổ chức đã tồn tại"}
 
         };
 

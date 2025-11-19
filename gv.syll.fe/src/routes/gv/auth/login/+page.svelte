@@ -3,7 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import logo from '$lib/assets/logo-hucetext-trans.png';
 	import { IconBrandGoogleFilled } from '@tabler/icons-svelte';
-	import { CryptoUtils } from '$lib/crypto.utils';
+	import { CryptoUtils } from '$lib/utils/crypto.utils.js';
 	import { AuthConstants } from '$lib/constants/auth.constants';
 
 	// `data` comes automatically from the server-side load function

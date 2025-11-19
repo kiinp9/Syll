@@ -53,8 +53,8 @@ namespace syll.be.Controllers.ToChuc
             }
         }
         [Permission(PermissionKeys.ToChucDelete)]
-        [HttpDelete("")]
-        public ApiResponse Delete([FromQuery] int idToChuc)
+        [HttpDelete("{idToChuc}")]
+        public ApiResponse Delete([FromRoute] int idToChuc)
         {
             try
             {
