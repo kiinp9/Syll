@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace syll.be.application.ToChuc.Dtos
 {
-    public class FindPagingToChucDto: BaseRequestPagingDto
+    public class FindPagingDanhBaToChucByIdToChucDto : BaseRequestPagingDto
     {
-
+        public int IdToChuc { get; set; }
     }
 }

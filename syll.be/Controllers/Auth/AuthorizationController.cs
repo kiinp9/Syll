@@ -367,10 +367,7 @@ namespace syll.be.Controllers.Auth
         }
 
         [HttpGet("~/external-callback")]
-        public async Task<IActionResult> ExternalCallback(
-            [FromServices] UserManager<AppUser> userManager,
-            string? returnUrl = "/",
-            string? remoteError = null)
+        public async Task<IActionResult> ExternalCallback( [FromServices] UserManager<AppUser> userManager, string? returnUrl = "/",string? remoteError = null)
         {
             _logger.LogInformation("External callback received. Return URL: {ReturnUrl}", returnUrl);
 
@@ -394,7 +391,6 @@ namespace syll.be.Controllers.Auth
 
             _logger.LogInformation("External authentication successful for email: {Email}", email);
 
-            // Kiểm tra email có tồn tại trong bảng DanhBa không
             var danhBaExists = await _syllDbContext.DanhBas
                 .AsNoTracking()
                 .AnyAsync(x => x.Email == email && !x.Deleted);
@@ -407,7 +403,7 @@ namespace syll.be.Controllers.Auth
 
             _logger.LogInformation("Email {Email} found in DanhBa, proceeding with authentication", email);
 
-            var user = userManager.Users.AsNoTracking().FirstOrDefault(x => x.Email == email);
+            var user = await userManager.FindByEmailAsync(email);
 
             if (user == null)
             {
@@ -421,61 +417,86 @@ namespace syll.be.Controllers.Auth
                     FullName = name ?? "",
                     Password = "Password@7"
                 });
+
                 user = await userManager.FindByIdAsync(newUser.Id);
 
                 _logger.LogInformation("New user created with ID: {UserId}", user.Id);
+
+                var addRoleResult = await userManager.AddToRoleAsync(user, RoleConstants.ROLE_STAFF);
+                if (addRoleResult.Succeeded)
+                {
+                    _logger.LogInformation("Role Staff assigned to new user: {UserId}", user.Id);
+                }
+                else
+                {
+                    _logger.LogError("Failed to assign Staff role to user {UserId}. Errors: {Errors}",
+                        user.Id,
+                        string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
+                }
             }
             else
             {
                 _logger.LogInformation("Existing user found with ID: {UserId}", user.Id);
+
+                var userRoles = await userManager.GetRolesAsync(user);
+                if (!userRoles.Contains(RoleConstants.ROLE_STAFF))
+                {
+                    var addRoleResult = await userManager.AddToRoleAsync(user, RoleConstants.ROLE_STAFF);
+                    if (addRoleResult.Succeeded)
+                    {
+                        _logger.LogInformation("Role Staff assigned to existing user: {UserId}", user.Id);
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to assign Staff role to existing user {UserId}. Errors: {Errors}",
+                            user.Id,
+                            string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("User {UserId} already has Staff role", user.Id);
+                }
             }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            // Use the client_id as the subject identifier.
             identity.SetClaim(Claims.Subject, user.Id);
             identity.SetClaim(Claims.Name, user.FullName);
             identity.SetClaim(Claims.Username, user.UserName);
             identity.SetClaim(CustomClaimTypes.UserType, "User");
+
             var roles = await userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, role));
             }
+
             identity.SetScopes(
-                    new[]
-                    {
-                    Scopes.OpenId,
-                    Scopes.Email,
-                    Scopes.Profile,
-                    Scopes.Roles,
-                    Scopes.OfflineAccess
-                    }
-                );
+                new[]
+                {
+                     Scopes.OpenId,
+                     Scopes.Email,
+                     Scopes.Profile,
+                     Scopes.Roles,
+                     Scopes.OfflineAccess
+                }
+            );
+
             identity.SetDestinations(claim => claim.Type switch
             {
-                // Allow the "name" claim to be stored in both the access and identity tokens
-                // when the "profile" scope was granted (by calling principal.SetScopes(...)).
                 Claims.Name when claim.Subject.HasScope(Scopes.Profile)
                     => [Destinations.AccessToken, Destinations.IdentityToken],
-
                 CustomClaimTypes.UserType when true
                     => [Destinations.AccessToken, Destinations.IdentityToken],
-
                 ClaimTypes.Role => [Destinations.AccessToken, Destinations.IdentityToken],
-
-                // Otherwise, only store the claim in the access tokens.
                 _ => [Destinations.AccessToken]
             });
 
-            // Sign in the user temporarily with cookie
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
             _logger.LogInformation("User signed in with cookie authentication, redirecting to: {ReturnUrl}", returnUrl);
 
-            // Go back to original /connect/authorize request
             return Redirect(returnUrl);
-
-            //return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
     }
 }

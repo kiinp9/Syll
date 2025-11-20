@@ -25,6 +25,7 @@
 	let isOpenDialogDeleteToChuc = $state(false);
 	let isSubmitting = $state(false);
 	let selectedToChuc = $state<number | null>(null);
+	let nhanVienSection: HTMLDivElement;
 
 
 	function openCreateToChuc() {
@@ -32,47 +33,58 @@
 	}
 
 	
-	function openDeleteToChuc( id: number ) {
+	function openDeleteToChuc(event: Event, id: number) {
+		event.stopPropagation();
 		selectedToChuc = id;
 		isOpenDialogDeleteToChuc = true;
+	}
+
+	function getNhanVienToChuc(id: number) {
+		selectedToChuc = id;
+		goto(`?page=1&idToChuc=${id}`).then(() => {
+			setTimeout(() => {
+				nhanVienSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}, 100);
+		});
 	}
 
 	function closeDialog() {
 		isOpenDialogCreateToChuc = false;
 	}
 
-	const staff = [
-		{ name: 'Test Admin User', email: 'test.admin.1761371844057@example.com', department: 'Unassigned', role: 'Admin' },
-		{ name: 'Test Staff User', email: 'test.staff.1761371844079@example.com', department: 'Unassigned', role: 'Staff' },
-		{ name: 'Admin User', email: 'admin@huce.edu.vn', department: 'Unassigned', role: 'Admin' },
-		{ name: 'Nguyễn Văn Minh', email: 'staff@huce.edu.vn', department: 'Khoa Xây dựng Dân dụng và Công nghiệp', role: 'Staff' },
-		{ name: 'Dương Thị Tú', email: 'user1@huce.edu.vn', department: 'Khoa Xây dựng Dân dụng và Công nghiệp', role: 'Staff' },
-		{ name: 'Đỗ Minh Dũng', email: 'user2@huce.edu.vn', department: 'Phòng Đào tạo', role: 'Staff' },
-		{ name: 'Phạm Quốc Tuấn', email: 'user3@huce.edu.vn', department: 'Phòng Hành chính - Tổng hợp', role: 'Staff' },
-		{ name: 'Phan Đức Chi', email: 'user4@huce.edu.vn', department: 'Phòng Đào tạo', role: 'Staff' }
-	];
 	const loaiToChucOptions = [
 		{ value: ToChucConstants.DaiHocCongLap, label: "Đại học công lập" },
 		{ value: ToChucConstants.KhoaDaoTao, label: "Khoa đào tạo" },
 		{ value: ToChucConstants.PhongBan, label: "Phòng ban" }
 	];
 	function getLoaiToChucLabel(value?: number): string {
-	if (!value) return 'Không xác định';
-	return loaiToChucOptions.find(opt => opt.value === value)?.label || 'Không xác định';
+		if (!value) return 'Không xác định';
+		return loaiToChucOptions.find(opt => opt.value === value)?.label || 'Không xác định';
 	}
 
 	let searchQuery = $state('');
 	
-	let currentPage = $derived(data.currentPage || 1);
-	let totalPages = $derived(data.totalPages || 1);
+	let currentPageToChuc = $derived(data.toChuc.currentPage || 1);
+	let totalPagesToChuc = $derived(data.toChuc.totalPages || 1);
 
+
+	let currentPageNhanVien = $derived(data.nhanVien.currentPage || 1);
+	let totalPagesNhanVien = $derived(data.nhanVien.totalPages || 1);
+	
 	function onPageChange(page: number) {
 		goto(`?page=${page}`);
 	}
 
-	function getPageNumbers() {
+	function getPageToChucNumbers() {
 		const pages = [];
-		for (let i = 1; i <= totalPages; i++) {
+		for (let i = 1; i <= totalPagesToChuc; i++) {
+			pages.push(i);
+		}
+		return pages;
+	}
+	function getPageNhanVienNumbers() {
+		const pages = [];
+		for (let i = 1; i <= totalPagesNhanVien; i++) {
 			pages.push(i);
 		}
 		return pages;
@@ -91,7 +103,7 @@
 					toast.success('Tạo tổ chức thành công!');
 					isOpenDialogCreateToChuc = false;
 					await update();
-					goto(`?page=${currentPage}`, { invalidateAll: true });
+					goto(`?page=${currentPageToChuc}`, { invalidateAll: true });
 				} else {
 					toast.error(response.message || 'Có sự cố xảy ra');
 				}
@@ -116,7 +128,7 @@
 					isOpenDialogDeleteToChuc = false;
 					selectedToChuc = null;
 					await update();
-					goto(`?page=${currentPage}`, { invalidateAll: true });
+					goto(`?page=${currentPageToChuc}`, { invalidateAll: true });
 				} else {
 					toast.error(response.message || 'Có sự cố xảy ra');
 				}
@@ -127,15 +139,15 @@
 	};
 </script>
 <Toaster />
-<div class="p-6 space-y-8">
+<div class="p-6 pt-0 space-y-8">
 	<div>
 		<h1 class="text-3xl font-bold text-gray-900">Quản lý tổ chức</h1>
 		<p class="text-gray-600 mt-1">Quản lý phòng ban, cán bộ, giảng viên, công nhân viên chức</p>
 	</div>
 
 	<Card class="border-t-4 border-t-white-400 shadow-xl">
-		<CardContent class="p-6 space-y-4">
-			<div class="flex items-center justify-between">
+		<CardContent class="p-6 pt-1 space-y-4">
+			<div class="flex items-center justify-between ">
 				<div>
 					<h2 class="text-xl font-semibold">Phòng ban</h2>
 					<p class="text-sm text-gray-600">Quản lý các phòng ban trong tổ chức</p>
@@ -147,10 +159,10 @@
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{#each data.data as organization}
-					<Card class="hover:shadow-md transition-shadow">
-						<CardContent class="p-4">
-							<div class="flex items-start justify-between mb-3">
+				{#each data.toChuc.data as organization}
+					<Card class="hover:shadow-md transition-shadow cursor-pointer" onclick={() => getNhanVienToChuc(organization.id!)}>
+						<CardContent class="p-4 flex justify-between gap-3">
+							<div class="flex-1 ">
 								<div class="flex items-center gap-3">
 									<div class="p-2 bg-blue-50 rounded-lg">
 										<Building class="w-5 h-5 text-blue-600" />
@@ -160,13 +172,16 @@
 										<p class="text-sm text-gray-600">{organization.soNhanVien} members</p>
 									</div>
 								</div>
-								<Button variant="ghost" size="icon" class="text-red-600 hover:text-red-700 hover:bg-red-50 h-10 w-10" onclick={() => openDeleteToChuc(organization.id!)}>
-	                                <Trash class="w-6 h-6" />
+								<p class="text-sm text-gray-600 mb-1"><strong>Loại tổ chức:</strong> {getLoaiToChucLabel(organization.loaiToChuc)}</p>
+							    <p class="text-sm text-gray-600 mb-1"><strong>Mô tả:</strong> {organization.moTa}</p>
+							    <p class="text-sm text-gray-600"><strong>Mã số tổ chức:</strong> {organization.maSoToChuc || 'Chưa có'}</p>
+								
+							</div>
+							<div class="flex items-center">
+							    <Button variant="ghost" size="icon-sm" class="text-red-600 hover:text-red-700 hover:bg-red-50 self-center" onclick={(e) => openDeleteToChuc(e, organization.id!)}>
+	                                <Trash class="size-5" />
                                 </Button>
 							</div>
-							<p class="text-sm text-gray-600 mb-1"><strong>Loại tổ chức:</strong> {getLoaiToChucLabel(organization.loaiToChuc)}</p>
-							<p class="text-sm text-gray-600 mb-1"><strong>Mô tả:</strong> {organization.moTa}</p>
-							<p class="text-sm text-gray-600"><strong>Mã số tổ chức:</strong> {organization.maSoToChuc || 'Chưa có'}</p>
 						</CardContent>
 					</Card>
 				{/each}
@@ -176,17 +191,17 @@
 				<Button 
 					variant="outline" 
 					size="sm"
-					disabled={currentPage === 1}
-					onclick={() => onPageChange(currentPage - 1)}
+					disabled={currentPageToChuc === 1}
+					onclick={() => onPageChange(currentPageToChuc - 1)}
 				>
 					Previous
 				</Button>
 				
-				{#each getPageNumbers() as page}
+				{#each getPageToChucNumbers() as page}
 					<Button 
-						variant={currentPage === page ? "default" : "outline"}
+						variant={currentPageToChuc === page ? "default" : "outline"}
 						size="sm"
-						class={currentPage === page ? "bg-blue-600 text-white" : ""}
+						class={currentPageToChuc === page ? "bg-blue-600 text-white" : ""}
 						onclick={() => onPageChange(page)}
 					>
 						{page}
@@ -196,8 +211,8 @@
 				<Button 
 					variant="outline" 
 					size="sm"
-					disabled={currentPage === totalPages}
-					onclick={() => onPageChange(currentPage + 1)}
+					disabled={currentPageToChuc === totalPagesToChuc}
+					onclick={() => onPageChange(currentPageToChuc + 1)}
 				>
 					Next
 				</Button>
@@ -205,60 +220,100 @@
 		</CardContent>
 	</Card>
 
-	<Card class="border-t-4 border-t-white-400 shadow-xl">
-		<CardContent class="p-6 space-y-4">
-			<div>
-				<h2 class="text-xl font-semibold">Staff Management</h2>
-				<p class="text-sm text-gray-600">Assign staff to departments and manage roles</p>
-			</div>
+	<div bind:this={nhanVienSection}>
+		<Card class="border-t-4 border-t-white-400 shadow-xl">
+			<CardContent class="p-6 space-y-4">
+				<div>
+					<h2 class="text-xl font-semibold">Quản lý nhân viên</h2>
+				</div>
 
-			<div class="relative">
-				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-				<Input
-					bind:value={searchQuery}
-					placeholder="Search by name or email..."
-					class="pl-10"
-				/>
-			</div>
+				<div class="relative">
+					<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+					<Input
+						bind:value={searchQuery}
+						placeholder="Search by name or email..."
+						class="pl-10"
+					/>
+				</div>
 
-			<Card>
-				<CardContent class="p-0">
-					<div class="overflow-x-auto">
-						<table class="w-full">
-							<thead class="border-b bg-gray-50">
-								<tr>
-									<th class="text-left p-4 font-semibold text-gray-700">Name</th>
-									<th class="text-left p-4 font-semibold text-gray-700">Email</th>
-									<th class="text-left p-4 font-semibold text-gray-700">Department</th>
-									<th class="text-left p-4 font-semibold text-gray-700">Role</th>
-									<th class="text-left p-4 font-semibold text-gray-700">Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each staff as member}
-									<tr class="border-b hover:bg-gray-50 transition-colors">
-										<td class="p-4 font-medium">{member.name}</td>
-										<td class="p-4 text-gray-600">{member.email}</td>
-										<td class="p-4 text-gray-600">{member.department}</td>
-										<td class="p-4">
-											<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {member.role === 'Admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}">
-												{member.role}
-											</span>
-										</td>
-										<td class="p-4">
-											<Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-												<Edit class="w-4 h-4" />
-											</Button>
-										</td>
+				<Card>
+					<CardContent class="p-0">
+						<div class="overflow-x-auto">
+							<table class="w-full">
+								<thead class="border-b bg-gray-50">
+									<tr>
+										<th class="text-left p-4 font-semibold text-gray-700">Name</th>
+										<th class="text-left p-4 font-semibold text-gray-700">Email</th>
+										<th class="text-left p-4 font-semibold text-gray-700">Role</th>
+										<th class="text-left p-4 font-semibold text-gray-700">Action</th>
 									</tr>
-								{/each}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									{#if data.nhanVien.data.length > 0}
+										{#each data.nhanVien.data as member}
+											<tr class="border-b hover:bg-gray-50 transition-colors">
+												<td class="p-4 font-medium">{member.hoVaTen}</td>
+												<td class="p-4 text-gray-600">{member.email}</td>
+												<td class="p-4">
+													<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+														{member.role?.name || 'N/A'}
+													</span>
+												</td>
+												<td class="p-4">
+													<Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+														<Edit class="w-4 h-4" />
+													</Button>
+												</td>
+											</tr>
+										{/each}
+									{:else}
+										<tr>
+											<td colspan="4" class="p-4 text-center text-gray-500">
+												Chọn một tổ chức để xem danh sách nhân viên
+											</td>
+										</tr>
+									{/if}
+								</tbody>
+							</table>
+						</div>
+					</CardContent>
+				</Card>
+
+				{#if data.nhanVien.data.length > 0}
+					<div class="flex justify-end items-center gap-2 pt-4">
+						<Button 
+							variant="outline" 
+							size="sm"
+							disabled={currentPageNhanVien === 1}
+							onclick={() => goto(`?page=${currentPageNhanVien - 1}&idToChuc=${selectedToChuc}`)}
+						>
+							Previous
+						</Button>
+						
+						{#each getPageNhanVienNumbers() as page}
+							<Button 
+								variant={currentPageNhanVien === page ? "default" : "outline"}
+								size="sm"
+								class={currentPageNhanVien === page ? "bg-blue-600 text-white" : ""}
+								onclick={() => goto(`?page=${page}&idToChuc=${selectedToChuc}`)}
+							>
+								{page}
+							</Button>
+						{/each}
+
+						<Button 
+							variant="outline" 
+							size="sm"
+							disabled={currentPageNhanVien === totalPagesNhanVien}
+							onclick={() => goto(`?page=${currentPageNhanVien + 1}&idToChuc=${selectedToChuc}`)}
+						>
+							Next
+						</Button>
 					</div>
-				</CardContent>
-			</Card>
-		</CardContent>
-	</Card>
+				{/if}
+			</CardContent>
+		</Card>
+	</div>
 </div>
 
 

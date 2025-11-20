@@ -10,4 +10,5 @@ export const ENDPOINTS = {
     getToChucPaging :'/api/core/to-chuc',
     createToChuc : '/api/core/to-chuc',
     deleteToChuc : (idToChuc: number) => `/api/core/to-chuc/${idToChuc}`,
+    getPagingNhanVienToChuc: '/api/core/to-chuc/nhan-vien',
 }

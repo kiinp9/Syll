@@ -10,5 +10,6 @@ namespace syll.be.shared.Constants.Auth
     {
         public const string Permission = "Permission";
         public const string UserType = "user_type";
+
     }
 }

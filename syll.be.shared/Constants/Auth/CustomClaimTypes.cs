@@ -9,5 +9,6 @@ namespace syll.be.shared.Constants.Auth
     public static class RoleConstants
     {
         public const string ROLE_SUPER_ADMIN = "SuperAdmin";
+        public const string ROLE_STAFF = "Staff";
     }
 }

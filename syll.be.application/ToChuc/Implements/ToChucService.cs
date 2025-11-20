@@ -175,6 +175,66 @@ namespace syll.be.application.ToChuc.Implements
         }
 
 
+        public BaseResponsePagingDto<ViewDanhBaToChucByIdToChucDto> FindPagingDanhBaToChuc(FindPagingDanhBaToChucByIdToChucDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindPagingDanhBaToChuc)}  dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = IsSuperAdmin();
+            var toChuc = _syllDbContext.ToChucs.FirstOrDefault(x => x.Id == dto.IdToChuc && (isSuperAdmin || x.CreatedBy == currentUserId) && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
+            var query = from tcdb in _syllDbContext.ToChucDanhBa
+                        where tcdb.IdToChuc == dto.IdToChuc && !tcdb.Deleted
+                        join db in _syllDbContext.DanhBas on tcdb.IdDanhBa equals db.Id
+                        where !db.Deleted
+                        select new
+                        {
+                            tcdb.Id,
+                            db.HoVaTen,
+                            db.Email,
+                        };
+            var items = query.ToList().Select(item =>
+            {
+                var user = _syllDbContext.Users.AsNoTracking().FirstOrDefault(x => x.Email == item.Email);
+                ViewRoleDanhBaToChucDto? roleDto = null;
+                if (user != null)
+                {
+                    var userRoles = (from ur in _syllDbContext.UserRoles
+                                     where ur.UserId == user.Id
+                                     join r in _syllDbContext.Roles on ur.RoleId equals r.Id
+                                     select new ViewRoleDanhBaToChucDto
+                                     {
+                                         Id = r.Id,
+                                         Name = r.Name ?? string.Empty
+                                     }).FirstOrDefault();
+                    if (userRoles != null)
+                    {
+                        roleDto = userRoles;
+                    }
+                    else 
+                    { 
+                        roleDto = null; 
+                    }
+                }
+                else
+                {
+                    roleDto = null;
+                }
+                    return new ViewDanhBaToChucByIdToChucDto
+                    {
+                        Id = item.Id,
+                        HoVaTen = item.HoVaTen,
+                        Email = item.Email,
+                        role = roleDto ?? new ViewRoleDanhBaToChucDto { }
+                    };
+            });
+            return new BaseResponsePagingDto<ViewDanhBaToChucByIdToChucDto>
+            {
+                Items = items,
+                TotalItems = query.Count()
+            };
+        }
+
+
 
     }
 }

@@ -95,6 +95,21 @@ namespace syll.be.Controllers.ToChuc
             }
         }
 
+        [Permission(PermissionKeys.ToChucView)]
+        [HttpGet("nhan-vien")]
+        public ApiResponse FindPagingDanhBaToChuc([FromQuery] FindPagingDanhBaToChucByIdToChucDto dto )
+        {
+            try
+            {
+                var data = _toChucService.FindPagingDanhBaToChuc(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
     }
 
 

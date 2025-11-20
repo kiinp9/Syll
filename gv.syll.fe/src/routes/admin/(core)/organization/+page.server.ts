@@ -1,51 +1,82 @@
 import { API_BASE_URL } from "$env/static/private";
 import { ENDPOINTS } from "$lib/api/endpoint";
-import type { IViewToChuc } from "$lib/models/organization/organization.models";
+import type { IViewNhanVienToChuc, IViewToChuc } from "$lib/models/organization/organization.models";
 import type { IBaseResponse, IBaseResponsePaging } from "$lib/models/shared/base-response";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ fetch, cookies,url }) => {
+export const load: PageServerLoad = async ({ fetch, cookies, url }) => {
     const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = 12;
+    const idToChuc = parseInt(url.searchParams.get('idToChuc') || '0');
+    const pageSizeToChuc = 12;
+    const pageSizeNhanVien = 10;
+    
 
-    const params = new URLSearchParams({
-        pageSize: pageSize.toString(),
+    // Load ToChuc
+    const paramsToChuc = new URLSearchParams({
+        pageSize: pageSizeToChuc.toString(),
         pageNumber: page.toString()
     });
-    const endpoint = `${API_BASE_URL}${ENDPOINTS.getToChucPaging}?` + params;
-    console.log('LOAD DATA: ', endpoint);
+    const endpointToChuc = `${API_BASE_URL}${ENDPOINTS.getToChucPaging}?` + paramsToChuc;
+    console.log('LOAD ToChuc DATA: ', endpointToChuc);
 
-    const res = await fetch(endpoint, {
+    const resToChuc = await fetch(endpointToChuc, {
         method: 'GET'
     });
 
-    if (!res.ok) {
-        return {
-            data: []
-        };
+    let toChucData: IViewToChuc[] = [];
+    let toChucCurrentPage = 1;
+    let toChucTotalPages = 1;
+
+    if (resToChuc.ok) {
+        const dataToChuc: IBaseResponsePaging<IViewToChuc> = await resToChuc.json();
+        if (dataToChuc.status === 1) {
+            toChucData = dataToChuc.data.items;
+            toChucCurrentPage = page;
+            toChucTotalPages = Math.ceil(dataToChuc.data.totalItems / pageSizeToChuc);
+        }
     }
 
-    const data: IBaseResponsePaging<IViewToChuc> = await res.json();
+    // Load NhanVien
+    const paramsNhanVien = new URLSearchParams({
+        idToChuc: idToChuc?.toString() || '',
+        pageSize: pageSizeNhanVien.toString(),
+        pageNumber: page.toString()
+    });
+    const endpointNhanVien = `${API_BASE_URL}${ENDPOINTS.getPagingNhanVienToChuc}?` + paramsNhanVien;
+    console.log('LOAD NhanVienToChuc DATA: ', endpointNhanVien);
 
-    if (data.status === 1) {
-        const totalPages = Math.ceil(data.data.totalItems / pageSize);
-        return { 
-            data: data.data.items,
-            currentPage: page,
-            totalPages: totalPages
-        };
+    const resNhanVien = await fetch(endpointNhanVien, {
+        method: 'GET'
+    });
+
+    let nhanVienData: IViewNhanVienToChuc[] = [];
+    let nhanVienCurrentPage = 1;
+    let nhanVienTotalPages = 1;
+
+    if (resNhanVien.ok) {
+        const dataNhanVien: IBaseResponsePaging<IViewNhanVienToChuc> = await resNhanVien.json();
+        if (dataNhanVien.status === 1) {
+            nhanVienData = dataNhanVien.data.items;
+            nhanVienCurrentPage = page;
+            nhanVienTotalPages = Math.ceil(dataNhanVien.data.totalItems / pageSizeNhanVien);
+        }
     }
 
-    return { 
-        data: [],
-        currentPage: 1,
-        totalPages: 1
+    return {
+        toChuc: {
+            data: toChucData,
+            currentPage: toChucCurrentPage,
+            totalPages: toChucTotalPages
+        },
+        nhanVien: {
+            data: nhanVienData,
+            currentPage: nhanVienCurrentPage,
+            totalPages: nhanVienTotalPages
+        },
+     
     };
-
-
-
-
 };
+
 export const actions: Actions = {
     createToChuc: async ({ request, cookies, fetch }) => {
         const formData = await request.formData();
@@ -87,8 +118,6 @@ export const actions: Actions = {
     deleteToChuc: async ({ request, cookies, fetch }) => {
         const formData = await request.formData();
         console.log(formData);
-
-       
 
         const res = await fetch(`${API_BASE_URL}${ENDPOINTS.deleteToChuc(Number(formData.get('idToChuc')))}`, {
             method: 'DELETE',
