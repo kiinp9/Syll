@@ -73,7 +73,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, url }) => {
             currentPage: nhanVienCurrentPage,
             totalPages: nhanVienTotalPages
         },
-     
+      
     };
 };
 
@@ -121,6 +121,35 @@ export const actions: Actions = {
 
         const res = await fetch(`${API_BASE_URL}${ENDPOINTS.deleteToChuc(Number(formData.get('idToChuc')))}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!res.ok) {
+            try {
+                const errorData: IBaseResponse = await res.json();
+                return errorData;
+            } catch {
+                const failedRes: IBaseResponse = {
+                    message: 'Có sự cố xảy ra',
+                    code: -1,
+                    status: 0
+                };
+                return failedRes;
+            }
+        }
+
+        const data: IBaseResponse = await res.json();
+        return data;
+    },
+
+    getListDropDownFormLoai: async ({ request, cookies, fetch }) => {
+        const formData = await request.formData();
+        console.log(formData);
+
+        const res = await fetch(`${API_BASE_URL}${ENDPOINTS.getListDropDownForm}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }

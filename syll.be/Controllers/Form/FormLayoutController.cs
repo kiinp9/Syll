@@ -39,6 +39,10 @@ namespace syll.be.Controllers.Form
             }
         }
 
+
+
+
+        // FindLayoutById cho user Danh bạ
         //[Permission(PermissionKeys.FormView)]
         [HttpGet("{id}")]
         public async Task<ApiResponse> FindById([FromRoute] int id)
@@ -46,6 +50,24 @@ namespace syll.be.Controllers.Form
             try
             {
                 var data = await _formLayoutService.FindLayoutById(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+
+
+        // FindLayoutByIdDanhBa cho admin
+        [Permission(PermissionKeys.FormView)]
+        [HttpGet("{id}/nhan-vien/{idDanhBa}")]
+        public ApiResponse FindByIdDanhBa([FromRoute] int id, [FromRoute] int idDanhBa)
+        {
+            try
+            {
+                var data = _formLayoutService.FindLayoutByIdDanhBa(id,idDanhBa);
                 return new(data);
             }
             catch (Exception ex)

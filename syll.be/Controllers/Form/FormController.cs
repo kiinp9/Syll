@@ -130,7 +130,7 @@ namespace syll.be.Controllers.Form
         }*/
 
 
-     
+        //UpdateFormDataAdmin cho nhân viên 
         [HttpPut("{idFormLoai}/form-content")]
         public async Task<ApiResponse> UpdateFormData([FromRoute] int idFormLoai, [FromBody] UpdateFormDataRequestDto dto)
         {
@@ -145,13 +145,17 @@ namespace syll.be.Controllers.Form
             }
         }
 
+
+
+
+        //UpdateFormDataAdmin cho admin
         [Permission(PermissionKeys.FormUpdate)]
-        [HttpPut("{idFormLoai}/danha-ba/{idDanhBa}/form-content-admin")]
-        public async Task<ApiResponse> UpdateFormDataForAdmin([FromRoute] int idFormLoai,[FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
+        [HttpPut("{idFormLoai}/danh-ba/{idDanhBa}/form-content")]
+        public async Task<ApiResponse> UpdateFormDataAdmin ([FromRoute] int idFormLoai, [FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
         {
             try
             {
-                await _formService.UpdateFormDataForAdmin(idFormLoai,idDanhBa, dto);
+                await _formService.UpdateFormDataAdmin(idFormLoai,idDanhBa, dto);
                 return new();
             }
             catch (Exception ex)
@@ -159,6 +163,9 @@ namespace syll.be.Controllers.Form
                 return OkException(ex);
             }
         }
+
+
+
 
 
         [HttpGet("truong-data/{idTruongData}")]
@@ -175,7 +182,7 @@ namespace syll.be.Controllers.Form
             }
         }
 
-
+        // DeleteRowTableData cho nhân viên 
         [HttpDelete("row-table")]
         public async Task<ApiResponse> DeleteRowTableData([FromBody] DeleteRowTableDataDto dto)
         {
@@ -184,6 +191,22 @@ namespace syll.be.Controllers.Form
                 await _formService.DeleteRowTableData(dto);
                 return new();
             }catch(Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+
+        //DeleteRowTableData cho admin
+        [HttpDelete("nhan-vien/{idDanhBa}/row-table")]
+        public async Task<ApiResponse> DeleteRowTableDataAdmin([FromBody] DeleteRowTableDataDto dto, [FromRoute]int? idDanhBa)
+        {
+            try
+            {
+                await _formService.DeleteRowTableDataAdmin(dto,idDanhBa);
+                return new();
+            }
+            catch (Exception ex)
             {
                 return OkException(ex);
             }
@@ -205,6 +228,20 @@ namespace syll.be.Controllers.Form
                 return OkException(ex);
             }
 
+        }
+
+        [Permission(PermissionKeys.FormView)]
+        [HttpGet("list-drop-down")]
+        public ApiResponse GetListDropDownFormLoai()
+        {
+            try
+            {
+                var data = _formService.GetListDropDownFormLoai();
+                return new(data);
+            }catch(Exception ex)
+            {
+                return OkException(ex);
+            }
         }
     }
 }

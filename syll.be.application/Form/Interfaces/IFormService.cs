@@ -17,10 +17,19 @@ namespace syll.be.application.Form.Interfaces
         public void Delete(int id);
 
         //public GetFormInforByIdDanhBaDto GetFormInforByIdDanhBa(int idFormLoai,int idDanhBa);
+
+        // UpdateFormData cho nhân viên 
         public Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto);
-        public Task UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto);
+
+        //UpdateFormDataAdmin cho admin
+        public Task UpdateFormDataAdmin(int idFormLoai, int? idDanhBa, UpdateFormDataRequestDto dto);
         public List<GetDropDownDataResponseDto?> GetDropDownData(int idTruongData);
-        public  Task DeleteRowTableData(DeleteRowTableDataDto dto);
+        // DeleteRowTableData cho nhân viên 
+        public Task DeleteRowTableData(DeleteRowTableDataDto dto);
+
+        //DeleteRowTableData cho admin
+        public  Task DeleteRowTableDataAdmin(DeleteRowTableDataDto dto, int? idDanhBa);
         public void CreateTruongData(CreateTruongDataDto dto);
+        public List<GetListDropDownFormLoaiDto> GetListDropDownFormLoai();
     }
 }

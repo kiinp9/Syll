@@ -3,6 +3,7 @@ export const ENDPOINTS = {
     getMe: '/api/app/users/me',
     getFormPaging: '/api/core/form',
     getGvLayout: '/api/core/form-layout',
+    getGvLayoutForAdmin:(idForm:number,idDanhBa: number) => `/api/core/form-layout/${idForm}/nhan-vien/${idDanhBa}`,
     updateFormContent: (idForm: number) => `/api/core/form/${idForm}/form-content`,
     deleteRowTableData: '/api/core/form/row-table',
     downloadForm : (idForm: number) => `/api/core/form-template/form-loai/${idForm}/replace`,
@@ -11,4 +12,5 @@ export const ENDPOINTS = {
     createToChuc : '/api/core/to-chuc',
     deleteToChuc : (idToChuc: number) => `/api/core/to-chuc/${idToChuc}`,
     getPagingNhanVienToChuc: '/api/core/to-chuc/nhan-vien',
+    getListDropDownForm: '/api/core/form/list-drop-down',
 }

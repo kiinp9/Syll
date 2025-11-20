@@ -229,6 +229,7 @@ namespace syll.be.application.Form.Implements
         }*/
 
 
+        // UpdateFormData cho nhân viên 
         public async Task UpdateFormData(int idFormLoai, UpdateFormDataRequestDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateFormData)} - idFormLoai={idFormLoai}");
@@ -353,6 +354,10 @@ namespace syll.be.application.Form.Implements
             }
         }
 
+
+
+
+        // DeleteRowTableData cho nhân viên 
         public async Task DeleteRowTableData(DeleteRowTableDataDto dto)
         {
             _logger.LogInformation($"{nameof(DeleteRowTableData)} dto={JsonSerializer.Serialize(dto)}");
@@ -405,79 +410,51 @@ namespace syll.be.application.Form.Implements
                 throw;
             }
         }
-        public async Task UpdateFormDataForAdmin(int idFormLoai, int idDanhBa, UpdateFormDataRequestDto dto)
+
+
+
+
+        //DeleteRowTableData cho admin
+        public async Task DeleteRowTableDataAdmin(DeleteRowTableDataDto dto , int? idDanhBa)
         {
-            _logger.LogInformation($"{nameof(UpdateFormDataForAdmin)}  dto={JsonSerializer.Serialize(dto)}");
-            using var transaction = _syllDbContext.Database.BeginTransaction();
+            _logger.LogInformation($"{nameof(DeleteRowTableDataAdmin)} dto={JsonSerializer.Serialize(dto)}");
+
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
             try
             {
-                var form = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
-                    ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
-                var danhBa = _syllDbContext.DanhBas.FirstOrDefault(x => x.Id == idDanhBa && !x.Deleted)
-                    ?? throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
-                var formDanhBa = _syllDbContext.FormDanhBa.FirstOrDefault(x => x.IdDanhBa == idDanhBa && x.IdFormLoai == idFormLoai && !x.Deleted)
-                    ?? throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
-                var allIdTruongs = dto.TruongDatas.Select(t => t.IdTruong).Distinct().ToList();
 
 
-                var truongDataCount = await _syllDbContext.FormTruongDatas
-                    .Where(x => allIdTruongs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
-                    .CountAsync();
-                if (truongDataCount != allIdTruongs.Count)
-                    throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
-
-                var allIdDatas = dto.TruongDatas
+                var allIdDatas = dto.Truongs
                     .SelectMany(t => t.Datas.Select(d => d.IdData))
                     .Distinct()
                     .ToList();
 
-                var existingFormDatas = await _syllDbContext.FormDatas
-                    .AsNoTracking()
-                    .Where(x => allIdDatas.Contains(x.Id)
-                        && ( x.IdDanhBa == idDanhBa)
-                        && x.IdFormLoai == idFormLoai
-                        && !x.Deleted)
-                    .Select(x => new { x.Id, x.Data })
-                    .ToDictionaryAsync(x => x.Id, x => x.Data);
-
-
-                var updateDict = dto.TruongDatas
-                    .SelectMany(t => t.Datas)
-                    .ToDictionary(d => d.IdData, d => d.Data);
-
-                var changedIds = new List<int>();
-                foreach (var kvp in updateDict)
+                if (allIdDatas.Count == 0)
                 {
-                    if (existingFormDatas.TryGetValue(kvp.Key, out var oldData))
-                    {
-                        if (oldData != kvp.Value)
-                        {
-                            changedIds.Add(kvp.Key);
-                        }
-                    }
-
-                }
-
-                if (changedIds.Count == 0)
-                {
-
                     await transaction.CommitAsync();
                     return;
                 }
 
-
-                var recordsToUpdate = await _syllDbContext.FormDatas
-                    .Where(x => changedIds.Contains(x.Id))
+                var formDatasToDelete = await _syllDbContext.FormDatas
+                    .Where(x => allIdDatas.Contains(x.Id)
+                        && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                        && !x.Deleted)
                     .ToListAsync();
+
+                if (formDatasToDelete.Count == 0)
+                {
+                    await transaction.CommitAsync();
+                    return;
+                }
 
                 var vietNamNow = GetVietnamTime();
                 var currentUserId = getCurrentUserId();
 
-                foreach (var record in recordsToUpdate)
+                foreach (var record in formDatasToDelete)
                 {
-                    record.Data = updateDict[record.Id];
-                    record.ModifiedDate = vietNamNow;
-                    record.ModifiedBy = currentUserId;
+                    record.Deleted = true;
+                    record.DeletedBy = currentUserId;
+                    record.DeletedDate = vietNamNow;
                 }
 
                 await _syllDbContext.SaveChangesAsync();
@@ -485,8 +462,132 @@ namespace syll.be.application.Form.Implements
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
-                _logger.LogError(ex, $"Error in {nameof(UpdateFormDataForAdmin)}");
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, $"Error in {nameof(DeleteRowTableData)}");
+                throw;
+            }
+        }
+
+        //UpdateFormDataAdmin cho admin
+        public async Task UpdateFormDataAdmin(int idFormLoai,int? idDanhBa, UpdateFormDataRequestDto dto)
+        {
+            _logger.LogInformation($"{nameof(UpdateFormDataAdmin)} - idFormLoai={idFormLoai}  - idDanhBa ={idDanhBa}");
+            using var transaction = await _syllDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var formExists = await _syllDbContext.FormLoais
+                    .AnyAsync(x => x.Id == idFormLoai && !x.Deleted);
+                if (!formExists)
+                    throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+                if (idDanhBa.HasValue)
+                {
+                    var danhBaExists = await _syllDbContext.DanhBas
+                        .AnyAsync(x => x.Id == idDanhBa.Value && !x.Deleted);
+                    if (!danhBaExists)
+                        throw new UserFriendlyException(ErrorCodes.DanhBaErrorNotFound);
+                    var formDanhBaExists = await _syllDbContext.FormDanhBa
+                        .AnyAsync(x => x.IdDanhBa == idDanhBa.Value && x.IdFormLoai == idFormLoai && !x.Deleted);
+                    if (!formDanhBaExists)
+                        throw new UserFriendlyException(ErrorCodes.FormDanhBaErrorNotFound);
+                }
+                var allIdTruongs = dto.TruongDatas.Select(t => t.IdTruong).Distinct().ToList();
+
+                var truongDataCount = await _syllDbContext.FormTruongDatas
+                    .Where(x => allIdTruongs.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
+                    .CountAsync();
+                if (truongDataCount != allIdTruongs.Count)
+                    throw new UserFriendlyException(ErrorCodes.FormTruongDataErrorNotFound);
+
+
+                var dataToUpdate = dto.TruongDatas
+                    .SelectMany(t => t.Datas.Where(d => d.IdData > 0).Select(d => new { IdTruongData = t.IdTruong, d.IdData, d.Data }))
+                    .ToList();
+
+                var dataToInsert = dto.TruongDatas
+                    .SelectMany(t => t.Datas.Where(d => d.IdData <= 0).Select(d => new { IdTruongData = t.IdTruong, d.Data }))
+                    .ToList();
+
+                var vietNamNow = GetVietnamTime();
+                var currentUserId = getCurrentUserId();
+
+
+                if (dataToUpdate.Count > 0)
+                {
+                    var allIdDatas = dataToUpdate.Select(d => d.IdData).Distinct().ToList();
+
+                    var existingFormDatas = await _syllDbContext.FormDatas
+                        .AsNoTracking()
+                        .Where(x => allIdDatas.Contains(x.Id)
+                            && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                            && x.IdFormLoai == idFormLoai
+                            && !x.Deleted)
+                        .Select(x => new { x.Id, x.Data })
+                        .ToDictionaryAsync(x => x.Id, x => x.Data);
+
+                    var updateDict = dataToUpdate.ToDictionary(d => d.IdData, d => d.Data);
+
+                    var changedIds = new List<int>();
+                    foreach (var kvp in updateDict)
+                    {
+                        if (existingFormDatas.TryGetValue(kvp.Key, out var oldData))
+                        {
+                            if (oldData != kvp.Value)
+                            {
+                                changedIds.Add(kvp.Key);
+                            }
+                        }
+                    }
+
+                    if (changedIds.Count > 0)
+                    {
+                        var recordsToUpdate = await _syllDbContext.FormDatas
+                            .Where(x => changedIds.Contains(x.Id))
+                            .ToListAsync();
+
+                        foreach (var record in recordsToUpdate)
+                        {
+                            record.Data = updateDict[record.Id];
+                            record.ModifiedDate = vietNamNow;
+                            record.ModifiedBy = currentUserId;
+                        }
+                    }
+                }
+
+                if (dataToInsert.Count > 0)
+                {
+
+                    var allIdTruongsInTable = dataToInsert.Select(x => x.IdTruongData).Distinct().ToList();
+
+                    var maxIndexRowOrder = await _syllDbContext.FormDatas
+                        .Where(x => allIdTruongsInTable.Contains(x.IdTruongData)
+                            && x.IdFormLoai == idFormLoai
+                            && (!idDanhBa.HasValue || x.IdDanhBa == idDanhBa.Value)
+                            && !x.Deleted)
+                        .MaxAsync(x => (int?)x.IndexRowTable) ?? 0;
+                    var newRecords = dataToInsert.Select(item => new FormData
+                    {
+                        IdFormLoai = idFormLoai,
+                        IdDanhBa = idDanhBa ?? 0,
+                        IdTruongData = item.IdTruongData,
+                        Data = item.Data,
+                        CreatedDate = vietNamNow,
+                        CreatedBy = currentUserId,
+                        ModifiedDate = vietNamNow,
+                        IndexRowTable = maxIndexRowOrder + 1,
+                        //ModifiedBy = currentUserId,
+                        Deleted = false
+                    }).ToList();
+
+                    await _syllDbContext.FormDatas.AddRangeAsync(newRecords);
+                }
+
+                await _syllDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, $"Error in {nameof(UpdateFormData)}");
                 throw;
             }
         }
@@ -516,6 +617,25 @@ namespace syll.be.application.Form.Implements
             };
             _syllDbContext.FormTruongDatas.Add( truongData );
             _syllDbContext.SaveChanges();
+
+        }
+
+
+        public List<GetListDropDownFormLoaiDto> GetListDropDownFormLoai()
+        {
+            _logger.LogInformation($"{nameof(GetListDropDownFormLoai)} ");
+
+            var query = from fl in _syllDbContext.FormLoais
+                        where !fl.Deleted
+                        orderby fl.Id
+                        select new GetListDropDownFormLoaiDto
+                        {
+                            Id = fl.Id,
+                            TenFormLoai = fl.TenForm,
+                        };
+
+            var data = query.ToList();
+            return data;
 
         }
 

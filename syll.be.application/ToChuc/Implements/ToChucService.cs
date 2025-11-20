@@ -219,13 +219,18 @@ namespace syll.be.application.ToChuc.Implements
                 {
                     roleDto = null;
                 }
-                    return new ViewDanhBaToChucByIdToChucDto
+                return new ViewDanhBaToChucByIdToChucDto
+                {
+                    Id = item.Id,
+                    HoVaTen = item.HoVaTen,
+                    Email = item.Email,
+                    role = roleDto ?? new ViewRoleDanhBaToChucDto { },
+                    toChuc = new ViewToChucDanhBaDto
                     {
-                        Id = item.Id,
-                        HoVaTen = item.HoVaTen,
-                        Email = item.Email,
-                        role = roleDto ?? new ViewRoleDanhBaToChucDto { }
-                    };
+                         Id = dto.IdToChuc,
+                         TenToChuc = toChuc.TenToChuc
+                    }
+                };
             });
             return new BaseResponsePagingDto<ViewDanhBaToChucByIdToChucDto>
             {

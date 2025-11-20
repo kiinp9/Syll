@@ -109,6 +109,7 @@ namespace syll.be.application.Form.Implements
             
         }
 
+        // FindLayoutById cho user Danh bạ
         public async Task<ViewLayoutByIdDto> FindLayoutById(int id)
         {
             _logger.LogInformation($"{nameof(FindLayoutById)} id = {id}");
@@ -154,11 +155,10 @@ namespace syll.be.application.Form.Implements
                 .OrderBy(dd => dd.Order)
                 .ToList();
 
-            // Group formDatas by IdTruongData for easy lookup
             var formDatasByTruongId = formDatas.GroupBy(fd => fd.IdTruongData)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // ✅ Tạo Dictionary để group theo BlockTruongNhanBan và IndexRowTable
+   
             var truongCustomsByBlock = new Dictionary<int, Dictionary<int, List<GetTruongNhanBanCustom>>>();
 
             var result = new ViewLayoutByIdDto
@@ -195,12 +195,11 @@ namespace syll.be.application.Form.Implements
                                 ? GetTableRowsData(i.Id, formTruongDatas, formDatas)
                                 : formTruongDatas.Where(f => f.IdItem == i.Id).SelectMany(f =>
                                 {
-                                    // Get all formDatas for this truong
+
                                     var allFormDatas = formDatasByTruongId.ContainsKey(f.Id)
                                         ? formDatasByTruongId[f.Id]
                                         : new List<FormData>();
 
-                                    // ✅ Nếu có BlockTruongNhanBan > 0, thêm vào dictionary
                                     if (f.BlockTruongNhanBan > 0 && allFormDatas.Any())
                                     {
                                         foreach (var fd in allFormDatas)
@@ -234,7 +233,6 @@ namespace syll.be.application.Form.Implements
                                         }
                                     }
 
-                                    // If no data exists, return one empty record
                                     if (!allFormDatas.Any())
                                     {
                                         return new List<GetFormTruongData>
@@ -260,7 +258,6 @@ namespace syll.be.application.Form.Implements
                                         };
                                     }
 
-                                    // ✅ Chỉ trả về bản ghi đầu tiên (indexRowTable = 1) cho Items
                                     var firstRecord = allFormDatas.FirstOrDefault();
                                     if (firstRecord != null)
                                     {
@@ -315,12 +312,227 @@ namespace syll.be.application.Form.Implements
                         }).ToList()
                     }).ToList()
                 }).ToList(),
-                // ✅ Convert dictionary thành List grouped
+
                 TruongCustoms = truongCustomsByBlock
-                    .OrderBy(kvp => kvp.Key) // Sort by BlockTruongNhanBan
+                    .OrderBy(kvp => kvp.Key) 
                     .SelectMany(blockGroup =>
                         blockGroup.Value
-                            .OrderBy(indexGroup => indexGroup.Key) // Sort by IndexRowTable
+                            .OrderBy(indexGroup => indexGroup.Key)
+                            .SelectMany(indexGroup => indexGroup.Value)
+                    )
+                    .ToList()
+            };
+            return result;
+        }
+
+        // FindLayoutByIdDanhBa cho admin
+        public  ViewLayoutByIdDto FindLayoutByIdDanhBa(int id, int idDanhBa)
+        {
+            _logger.LogInformation($"{nameof(FindLayoutByIdDanhBa)} id = {id}, idDanhBa ={idDanhBa}");
+            var layout = _syllDbContext.Layouts
+                .FirstOrDefault(l => l.Id == id && !l.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorLayoutNotFound);
+            var blocks = _syllDbContext.Blocks
+                .Where(b => b.IdLayout == id && !b.Deleted)
+                .OrderBy(b => b.Order)
+                .ToList();
+            var blockIds = blocks.Select(b => b.Id).ToList();
+            var rows = _syllDbContext.Rows
+                .Where(r => blockIds.Contains(r.IdBlock) && !r.Deleted)
+                .OrderBy(r => r.Order)
+                .ToList();
+            var rowIds = rows.Select(r => r.Id).ToList();
+            var items = _syllDbContext.Items
+                .Where(i => rowIds.Contains(i.IdRow) && !i.Deleted)
+                .OrderBy(i => i.Order)
+                .ToList();
+            var itemIds = items.Select(i => i.Id).ToList();
+
+
+            var tableItemIds = items.Where(i => i.Type == ItemConstants.Table).Select(i => i.Id).ToList();
+
+            var tableHeaders = _syllDbContext.Tables
+                .Where(t => tableItemIds.Contains(t.IdItem) && !t.Deleted)
+                .OrderBy(t => t.Order)
+                .ToList();
+
+            var formTruongDatas = _syllDbContext.FormTruongDatas
+                .Where(f => itemIds.Contains(f.IdItem) && !f.Deleted)
+                .ToList();
+            var truongDataIds = formTruongDatas.Select(f => f.Id).ToList();
+            var formDatas = _syllDbContext.FormDatas
+                .Where(fd => truongDataIds.Contains(fd.IdTruongData) && fd.IdDanhBa == idDanhBa && !fd.Deleted)
+                .OrderBy(fd => fd.IndexRowTable)
+                .ThenBy(fd => fd.Id)
+                .ToList();
+            var dropDowns = _syllDbContext.DropDowns
+                .Where(dd => truongDataIds.Contains(dd.IdTruongData) && !dd.Deleted)
+                .OrderBy(dd => dd.Order)
+                .ToList();
+
+            var formDatasByTruongId = formDatas.GroupBy(fd => fd.IdTruongData)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+
+            var truongCustomsByBlock = new Dictionary<int, Dictionary<int, List<GetTruongNhanBanCustom>>>();
+
+            var result = new ViewLayoutByIdDto
+            {
+                Id = layout.Id,
+                IdFormLoai = layout.IdFormLoai,
+                Ten = layout.Ten,
+                Order = layout.Order,
+                Class = layout.Class,
+                Style = layout.Style,
+                Items = blocks.Select(b => new GetBlockDto
+                {
+                    Id = b.Id,
+                    Order = b.Order,
+                    Class = b.Class,
+                    Style = b.Style,
+                    Items = rows.Where(r => r.IdBlock == b.Id).Select(r => new GetRowDto
+                    {
+                        Id = r.Id,
+                        Order = r.Order,
+                        ShowNutCustom = r.ShowNutCustom,
+                        Style = r.Style,
+                        Class = r.Class,
+                        Items = items.Where(i => i.IdRow == r.Id).Select(i => new GetItemDto
+                        {
+                            Id = i.Id,
+                            InputName = i.InputName,
+                            Order = i.Order,
+                            Type = i.Type,
+                            Style = i.Style,
+                            Class = i.Class,
+                            Ratio = i.Ratio,
+                            Items = i.Type == ItemConstants.Table
+                                ? GetTableRowsData(i.Id, formTruongDatas, formDatas)
+                                : formTruongDatas.Where(f => f.IdItem == i.Id).SelectMany(f =>
+                                {
+
+                                    var allFormDatas = formDatasByTruongId.ContainsKey(f.Id)
+                                        ? formDatasByTruongId[f.Id]
+                                        : new List<FormData>();
+
+                                    if (f.BlockTruongNhanBan > 0 && allFormDatas.Any())
+                                    {
+                                        foreach (var fd in allFormDatas)
+                                        {
+                                            var blockNum = f.BlockTruongNhanBan;
+                                            var indexRow = fd.IndexRowTable ?? 1;
+
+                                            if (!truongCustomsByBlock.ContainsKey(blockNum))
+                                            {
+                                                truongCustomsByBlock[blockNum] = new Dictionary<int, List<GetTruongNhanBanCustom>>();
+                                            }
+
+                                            if (!truongCustomsByBlock[blockNum].ContainsKey(indexRow))
+                                            {
+                                                truongCustomsByBlock[blockNum][indexRow] = new List<GetTruongNhanBanCustom>();
+                                            }
+
+                                            truongCustomsByBlock[blockNum][indexRow].Add(new GetTruongNhanBanCustom
+                                            {
+                                                Id = f.Id,
+                                                TenTruong = f.TenTruong,
+                                                Type = f.Type,
+                                                BlockTruongNhanBan = f.BlockTruongNhanBan,
+                                                Item = new GetFormData
+                                                {
+                                                    Id = fd.Id,
+                                                    Data = fd.Data,
+                                                    IndexRowTable = fd.IndexRowTable
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    if (!allFormDatas.Any())
+                                    {
+                                        return new List<GetFormTruongData>
+                                        {
+                    new GetFormTruongData
+                    {
+                        Id = f.Id,
+                        TenTruong = f.TenTruong,
+                        Type = f.Type,
+                        BlockTruongNhanBan = f.BlockTruongNhanBan,
+                        Item = new GetFormData(),
+                        Items = i.Type == ItemConstants.DropDownText
+                            ? dropDowns.Where(dd => dd.IdTruongData == f.Id).Select(dd => new GetDropDownData
+                            {
+                                Id = dd.Id,
+                                Data = dd.Data,
+                                Order = dd.Order,
+                                Class = dd.Class,
+                                Style = dd.Style
+                            }).ToList()
+                            : new List<GetDropDownData?>()
+                    }
+                                        };
+                                    }
+
+                                    var firstRecord = allFormDatas.FirstOrDefault();
+                                    if (firstRecord != null)
+                                    {
+                                        return new List<GetFormTruongData>
+                                        {
+                            new GetFormTruongData
+                            {
+                                Id = f.Id,
+                                TenTruong = f.TenTruong,
+                                Type = f.Type,
+                                BlockTruongNhanBan = f.BlockTruongNhanBan,
+                                Item = new GetFormData
+                                {
+                                    Id = firstRecord.Id,
+                                    Data = firstRecord.Data,
+                                    IndexRowTable = firstRecord.IndexRowTable
+                                },
+                                Items = i.Type == ItemConstants.DropDownText
+                                    ? dropDowns.Where(dd => dd.IdTruongData == f.Id).Select(dd => new GetDropDownData
+                                    {
+                                        Id = dd.Id,
+                                        Data = dd.Data,
+                                        Order = dd.Order,
+                                        Class = dd.Class,
+                                        Style = dd.Style
+                                    }).ToList()
+                                    : new List<GetDropDownData?>()
+                            }
+                                        };
+                                    }
+
+                                    return new List<GetFormTruongData>();
+                                }).ToList(),
+                            Headers = i.Type == ItemConstants.Table
+                                ? tableHeaders.Where(th => th.IdItem == i.Id).Select(th =>
+                                {
+                                    var formTruongDataList = formTruongDatas.Where(f => f.IdItem == i.Id).OrderBy(f => f.Id).ToList();
+                                    var correspondingFormTruongData = formTruongDataList.ElementAtOrDefault(th.Order - 1);
+
+                                    return new GetTableHeader
+                                    {
+                                        Id = th.Id,
+                                        IdTruongData = th.IdTruongData,
+                                        Data = correspondingFormTruongData?.TenTruong ?? string.Empty,
+                                        Order = th.Order,
+                                        Ratio = th.Ratio,
+                                        Type = correspondingFormTruongData?.Type ?? string.Empty,
+                                        Class = th.Class
+                                    };
+                                }).ToList()
+                                : new List<GetTableHeader?>()
+                        }).ToList()
+                    }).ToList()
+                }).ToList(),
+
+                TruongCustoms = truongCustomsByBlock
+                    .OrderBy(kvp => kvp.Key)
+                    .SelectMany(blockGroup =>
+                        blockGroup.Value
+                            .OrderBy(indexGroup => indexGroup.Key)
                             .SelectMany(indexGroup => indexGroup.Value)
                     )
                     .ToList()

@@ -20,3 +20,28 @@ export interface ICreateToChuc {
     loaiToChuc?: number;
     maSoToChuc? : string;
 }
+
+
+export interface IViewNhanVienToChuc{
+    id?: number;
+    hoVaTen?: string;
+    email?: string;
+    role?: IViewRoleNhanVien;
+    toChuc?: IViewToChucNhanVien;
+}
+
+export interface IViewToChucNhanVien {
+    id?: number;
+    tenToChuc? : string;
+}
+
+export interface IViewRoleNhanVien{
+    id?: string;
+    name?: string;
+}
+
+
+export interface IGetListDropDownForm{
+    id?: number;
+    tenFormLoai?: string;
+}
