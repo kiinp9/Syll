@@ -188,7 +188,7 @@ namespace syll.be.application.ToChuc.Implements
                         where !db.Deleted
                         select new
                         {
-                            tcdb.Id,
+                            db.Id,
                             db.HoVaTen,
                             db.Email,
                         };

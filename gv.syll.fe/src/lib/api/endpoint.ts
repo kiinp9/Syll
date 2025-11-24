@@ -1,9 +1,11 @@
+import { get } from "svelte/store";
+
 export const ENDPOINTS = {
     connectToken: '/connect/token',
     getMe: '/api/app/users/me',
     getFormPaging: '/api/core/form',
     getGvLayout: '/api/core/form-layout',
-    getGvLayoutForAdmin:(idForm:number,idDanhBa: number) => `/api/core/form-layout/${idForm}/nhan-vien/${idDanhBa}`,
+    getGvLayoutForAdmin :`/api/core/form-layout/admin`,
     updateFormContent: (idForm: number) => `/api/core/form/${idForm}/form-content`,
     deleteRowTableData: '/api/core/form/row-table',
     downloadForm : (idForm: number) => `/api/core/form-template/form-loai/${idForm}/replace`,
@@ -13,4 +15,9 @@ export const ENDPOINTS = {
     deleteToChuc : (idToChuc: number) => `/api/core/to-chuc/${idToChuc}`,
     getPagingNhanVienToChuc: '/api/core/to-chuc/nhan-vien',
     getListDropDownForm: '/api/core/form/list-drop-down',
+    updateFormContentAdmin:  `/api/core/form/admin/form-content`,
+    deleteRowTableDataAdmin: '/api/core/form/row-table',
+    downloadFormAdmin: '/api/core/form-template/admin/replace',
+    getReportTotalNhanVienToChuc: (idFormLoai:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/nhan-vien`,
+    getReportNhanVienToChucPaging: (idFormLoai:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/to-chuc/paging`,
 }

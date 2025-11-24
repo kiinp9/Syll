@@ -150,8 +150,8 @@ namespace syll.be.Controllers.Form
 
         //UpdateFormDataAdmin cho admin
         [Permission(PermissionKeys.FormUpdate)]
-        [HttpPut("{idFormLoai}/danh-ba/{idDanhBa}/form-content")]
-        public async Task<ApiResponse> UpdateFormDataAdmin ([FromRoute] int idFormLoai, [FromRoute] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
+        [HttpPut("admin/form-content")]
+        public async Task<ApiResponse> UpdateFormDataAdmin ([FromQuery] int idFormLoai, [FromQuery] int idDanhBa ,[FromBody] UpdateFormDataRequestDto dto)
         {
             try
             {

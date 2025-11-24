@@ -28,6 +28,7 @@
     let isSubmitting = $state(false);
     let selectedToChuc = $state<number | null>(null);
     let nhanVienSection: HTMLDivElement;
+	let selectedIdFormLoai = $state<number | null >(null);
     
     let dropDownDataList = $state<any[]>([]);
     let btnSubmitDropDown: HTMLButtonElement;
@@ -159,6 +160,12 @@
         btnSubmitDropDown?.click();
     })
 
+
+	function openFormNhanVienByAdmin(idFormLoai: number,idNhanVien: number) {
+		 goto(`/admin/form?idFormLoai=${idFormLoai}&idDanhBa=${idNhanVien}`);
+
+	}
+
 </script>
 <Toaster />
 
@@ -196,7 +203,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {#each data.toChuc.data as organization}
-                    <Card class="hover:shadow-md transition-shadow cursor-pointer" onclick={() => getNhanVienToChuc(organization.id!)}>
+                    <Card class="hover:shadow-md transition-shadow cursor-pointer" onclick={() => getNhanVienToChuc(organization.id!)} >
                         <CardContent class="p-4 flex justify-between gap-3">
                             <div class="flex-1 ">
                                 <div class="flex items-center gap-3">
@@ -214,7 +221,7 @@
                                 
                             </div>
                             <div class="flex items-center">
-                                <Button variant="ghost" size="icon-sm" class="text-red-600 hover:text-red-700 hover:bg-red-50 self-center" onclick={(e) => openDeleteToChuc(e, organization.id!)}>
+                                <Button variant="ghost" size="icon-sm" class="text-red-600 hover:text-red-700 hover:bg-red-50 self-center" aria-label="Xóa tổ chức {organization.tenToChuc}" title="Xóa tổ chức" onclick={(e) => openDeleteToChuc(e, organization.id!)} >
                                     <Trash class="size-5" />
                                 </Button>
                             </div>
@@ -265,10 +272,17 @@
                 
 
                 <div class="flex gap-2">
-                    <select class="flex h-10 w-[200px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                        <option value="">Tất cả</option>
+                    <select 
+					    class="flex h-9 w-[200px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						bind:value={selectedIdFormLoai}
+						onchange ={(e) =>{
+							const target = e.target as HTMLSelectElement;
+							selectedIdFormLoai = target.value ? parseInt(target.value) : null;
+						}}>
+
+                        <option value={null} disabled selected hidden >Chọn loại form</option>
                         {#each dropDownDataList as item}
-                            <option value={item.id}>{item.tenToChuc || item.name || item.label}</option>
+                            <option value={item.id}>{item.tenFormLoai || item.name || item.label}</option>
                         {/each}
                     </select>
                     <div class="relative flex-1">
@@ -311,7 +325,16 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-center">
-                                                    <Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                                    <Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50" 
+													        onclick = {() =>{
+																if(!selectedIdFormLoai){
+																	toast.error('Vui lòng chọn loại form trước khi thực hiện thao tác');
+																	return;
+																}
+																if(member.id){
+																	openFormNhanVienByAdmin(selectedIdFormLoai,member.id);
+																}
+																}}  aria-label="Chỉnh sửa nhân viên {member.hoVaTen}">
                                                         <Edit class="w-4 h-4" />
                                                     </Button>
                                                 </td>
@@ -319,7 +342,7 @@
                                         {/each}
                                     {:else}
                                         <tr>
-                                            <td colspan="4" class="p-4 text-center text-gray-500">
+                                            <td colspan="5" class="p-4 text-center text-gray-500">
                                                 Chọn một tổ chức để xem danh sách nhân viên
                                             </td>
                                         </tr>

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "$env/static/private";
 import { ENDPOINTS } from "$lib/api/endpoint";
-import type { IViewNhanVienToChuc, IViewToChuc } from "$lib/models/organization/organization.models";
-import type { IBaseResponse, IBaseResponsePaging } from "$lib/models/shared/base-response";
+import type { IGetListDropDownFormLoai, IViewNhanVienToChuc, IViewToChuc } from "$lib/models/organization/organization.models";
+import type { IBaseResponse, IBaseResponsePaging, IBaseResponseWithData } from "$lib/models/shared/base-response";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ fetch, cookies, url }) => {
@@ -169,7 +169,18 @@ export const actions: Actions = {
             }
         }
 
-        const data: IBaseResponse = await res.json();
+        const data: IBaseResponseWithData<IGetListDropDownFormLoai[]> = await res.json();
+        if(data.status === 1 && data.data){
+            return{
+                status:data.status,
+                message:data.message,
+                code:data.code,
+                data:(data.data as IGetListDropDownFormLoai[]).map(item=>({
+                    id: item.id,
+                    tenFormLoai: item.tenFormLoai
+                }))
+            };
+        }
         return data;
     }
 } satisfies Actions;

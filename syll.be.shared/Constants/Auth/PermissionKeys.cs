@@ -44,6 +44,10 @@ namespace syll.be.shared.Constants.Auth
         public const string FormView = Function + "FormView";
         public const string FormImport = Function + "FormImport";
 
+
+        public const string CategoryReport = "OL Thống kê";
+        public const string ReportView = Function + "ReportView";
+
         public static readonly (string Key, string Name, string Category)[] All =
         {
             (MenuUserManagement, "Menu Quản lý User", "Menu"),
@@ -66,6 +70,8 @@ namespace syll.be.shared.Constants.Auth
             (DanhBaDelete, "Xoá Danh bạ", CategoryDanhBa),
             (DanhBaView, "Xem Danh bạ", CategoryDanhBa),
             (DanhBaImport,"Import Danh Bạ",DanhBaImport),
+
+            (ReportView, "Xem Thống kê", CategoryReport),
 
         };
     }

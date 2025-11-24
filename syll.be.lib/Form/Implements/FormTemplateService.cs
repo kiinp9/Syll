@@ -35,7 +35,7 @@ namespace syll.be.lib.Form.Implements
 
         }
 
-
+        // Xuất file docx cho nhân viên
         public async Task<byte[]> ReplaceWordFormTemplate(int idFormLoai)
         {
             _logger.LogInformation($"{nameof(ReplaceWordFormTemplate)} idFormLoai = {idFormLoai}");
@@ -50,7 +50,7 @@ namespace syll.be.lib.Form.Implements
             var truongDataIds = formDataList.Select(x => x.IdTruongData).Distinct().ToList();
 
             var formTruongDataList = await _syllDbContext.FormTruongDatas
-                .Where(x => truongDataIds.Contains(x.Id) && x.IdFormLoai == idFormLoai  && !x.Deleted)
+                .Where(x => truongDataIds.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
                 .ToListAsync();
 
             var truongNhaOList = formTruongDataList
@@ -180,6 +180,153 @@ namespace syll.be.lib.Form.Implements
 
             return memoryStream.ToArray();
         }
+
+        //Xuất file docx cho admin
+        public async Task<byte[]> ReplaceWordFormTemplateAdmin(int idFormLoai,int idDanhBa)
+        {
+            _logger.LogInformation($"{nameof(ReplaceWordFormTemplate)} idFormLoai = {idFormLoai}");
+            var formLoai = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == idFormLoai && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+            
+
+            var formDataList = await _syllDbContext.FormDatas
+                .Where(x => x.IdFormLoai == idFormLoai && x.IdDanhBa == idDanhBa && !x.Deleted)
+                .ToListAsync();
+
+            var truongDataIds = formDataList.Select(x => x.IdTruongData).Distinct().ToList();
+
+            var formTruongDataList = await _syllDbContext.FormTruongDatas
+                .Where(x => truongDataIds.Contains(x.Id) && x.IdFormLoai == idFormLoai && !x.Deleted)
+                .ToListAsync();
+
+            var truongNhaOList = formTruongDataList
+                .Where(x => x.BlockTruongNhanBan == TruongDataConstants.NhaO)
+                .OrderBy(x => x.IndexInTemplate)
+                .ToList();
+
+            var truongDatOList = formTruongDataList
+                .Where(x => x.BlockTruongNhanBan == TruongDataConstants.DatO)
+                .OrderBy(x => x.IndexInTemplate)
+                .ToList();
+
+            int cloneCountNhaO = CalculateCloneCount(formDataList, truongNhaOList);
+            int cloneCountDatO = CalculateCloneCount(formDataList, truongDatOList);
+            //idFormLoai = 1;
+            if (idFormLoai != 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.TemplateErrorTemplateFormLoaiNotFound);
+            }
+            var templateBytes = GenerateSoYeuLyLichTemplate(idFormLoai);
+
+            using var memoryStream = new MemoryStream();
+            memoryStream.Write(templateBytes, 0, templateBytes.Length);
+            memoryStream.Position = 0;
+
+            using (var document = WordprocessingDocument.Open(memoryStream, true))
+            {
+                var body = document.MainDocumentPart.Document.Body;
+
+                CloneFieldsForBlock(body, truongNhaOList, cloneCountNhaO, "Nhà ở");
+                CloneFieldsForBlock(body, truongDatOList, cloneCountDatO, "Đất ở");
+
+                var truongNhanBanIds = truongNhaOList.Select(x => x.Id)
+                    .Concat(truongDatOList.Select(x => x.Id))
+                    .ToList();
+
+                var rowDataList = formDataList
+                    .Where(x => !truongNhanBanIds.Contains(x.IdTruongData))
+                    .ToList();
+
+                foreach (var formData in rowDataList)
+                {
+                    var truongData = formTruongDataList.FirstOrDefault(x => x.Id == formData.IdTruongData);
+                    if (truongData == null) continue;
+
+                    int index = truongData.IndexInTemplate;
+                    string data = formData.Data;
+
+                    if (DateTime.TryParse(data, out DateTime dateValue))
+                    {
+                        if (index == 9)
+                        {
+                            ReplaceSpecialBirthdayField(body, dateValue);
+                            continue;
+                        }
+                        else
+                        {
+                            data = dateValue.ToString("dd/MM/yyyy");
+                        }
+                    }
+
+                    ReplaceFieldInDocument(body, index, data);
+                }
+
+                ReplaceBlockTruongNhanBanData(body, formDataList, truongNhaOList, "Nhà ở");
+                ReplaceBlockTruongNhanBanData(body, formDataList, truongDatOList, "Đất ở");
+
+                var tableItems = await _syllDbContext.Items
+                    .Where(item => item.Type == 5 && !item.Deleted &&
+                        _syllDbContext.Rows.Any(row => row.Id == item.IdRow && !row.Deleted &&
+                            _syllDbContext.Blocks.Any(block => block.Id == row.IdBlock && !block.Deleted &&
+                                _syllDbContext.Layouts.Any(layout => layout.Id == block.IdLayout &&
+                                    layout.IdFormLoai == idFormLoai && !layout.Deleted))))
+                    .OrderBy(item => item.Id)
+                    .ToListAsync();
+
+                var itemToTableIndexMap = new Dictionary<int, int>();
+                for (int i = 0; i < tableItems.Count; i++)
+                {
+                    itemToTableIndexMap[tableItems[i].Id] = i + 1;
+                }
+
+                var tableItemIds = tableItems.Select(x => x.Id).ToList();
+
+                var tableRecords = await _syllDbContext.Tables
+                    .Where(x => tableItemIds.Contains(x.IdItem) && !x.Deleted)
+                    .OrderBy(x => x.IdItem).ThenBy(x => x.Order)
+                    .ToListAsync();
+
+                var tableTruongDataIds = tableRecords.Select(x => x.IdTruongData).Distinct().ToList();
+
+                var tableFormDataList = await _syllDbContext.FormDatas
+                    .Where(x => tableTruongDataIds.Contains(x.IdTruongData) &&
+                        x.IdDanhBa == idDanhBa &&
+                        x.IndexRowTable.HasValue &&
+                        !x.Deleted)
+                    .ToListAsync();
+
+                var tableDataGroups = tableFormDataList
+                    .GroupBy(x => x.IdTruongData)
+                    .ToList();
+
+                foreach (var group in tableDataGroups)
+                {
+                    var tableRecord = tableRecords.FirstOrDefault(x => x.IdTruongData == group.Key);
+                    if (tableRecord == null) continue;
+
+                    int itemId = tableRecord.IdItem;
+                    int columnIndex = tableRecord.Order;
+
+                    var rowGroups = group.GroupBy(x => x.IndexRowTable.Value).OrderBy(x => x.Key);
+
+                    foreach (var rowGroup in rowGroups)
+                    {
+                        int rowIndex = rowGroup.Key;
+
+                        foreach (var formData in rowGroup)
+                        {
+                            string data = formData.Data;
+                            ReplaceFieldInTable(body, columnIndex, rowIndex, data, itemId, itemToTableIndexMap);
+                        }
+                    }
+                }
+
+                document.MainDocumentPart.Document.Save();
+            }
+
+            return memoryStream.ToArray();
+        }
+
 
         private int CalculateCloneCount(List<FormData> formDataList, List<FormTruongData> truongList)
         {

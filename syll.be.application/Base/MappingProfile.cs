@@ -2,6 +2,7 @@
 using syll.be.application.Auth.Dtos.User;
 using syll.be.application.DanhBa.Dtos;
 using syll.be.application.Form.Dtos.Form;
+using syll.be.application.Reports.Dtos;
 using syll.be.application.ToChuc.Dtos;
 using syll.be.domain.Auth;
 using syll.be.domain.Form;
@@ -23,6 +24,7 @@ namespace syll.be.application.Base
             CreateMap<domain.ToChuc.ToChuc, ViewToChucDto>();
             //CreateMap<domain.DanhBa.DanhBa, ViewDanhBaDto>();
             CreateMap<FormLoai, ViewFormLoaiDto>();
+            //CreateMap<domain.ToChuc.ToChuc, GetThongTinToChucDanhBaReportDto>();
             
 
         } 

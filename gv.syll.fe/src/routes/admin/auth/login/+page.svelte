@@ -17,10 +17,10 @@
 					<img src={logo} alt="" class="w-full" />
 				</div>
 				<Card.Header>
-					<Card.Title>
+					<Card.Title class ="text-center">
 						<span class="text-xl"> Đăng nhập hệ thống </span></Card.Title
 					>
-					<Card.Description>Trang admin quản lý cập nhật sơ yếu lý lịch</Card.Description>
+					<Card.Description class = "text-center">Trang admin quản lý cập nhật sơ yếu lý lịch</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<div class="flex flex-col gap-6">

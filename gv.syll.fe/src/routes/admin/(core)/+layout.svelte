@@ -45,7 +45,7 @@
 				icon: UploadIcon
 			},
 			{
-				url: '#',
+				url: '/admin/report/form',
 				title: 'Thống kê',
 				icon: ChartColumnIcon
 			},

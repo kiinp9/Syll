@@ -15,8 +15,10 @@ namespace syll.be.application.Form.Dtos.Form
     public class UpdateFormTruongDataRequestDto
     {
         public int IdTruong { get; set; }
-        public List<UpdateListFormDataRequestDto>  Datas { get; set; } = new List<UpdateListFormDataRequestDto> { };
-
+        // Dùng cho các trường thường (không phải bảng)
+        public List<UpdateListFormDataRequestDto> Datas { get; set; } = new List<UpdateListFormDataRequestDto>();
+        // Dùng cho các trường kiểu Table
+        public List<List<UpdateListFormDataRequestDto>>? TableRows { get; set; }
     }
 
     public class UpdateListFormDataRequestDto
@@ -24,5 +26,4 @@ namespace syll.be.application.Form.Dtos.Form
         public int IdData { get; set; }
         public string Data { get; set; } = String.Empty;
     }
-
 }

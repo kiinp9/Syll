@@ -5,6 +5,8 @@
 	import { IconBrandGoogleFilled } from '@tabler/icons-svelte';
 	import { CryptoUtils } from '$lib/utils/crypto.utils.js';
 	import { AuthConstants } from '$lib/constants/auth.constants';
+	import { goto } from '$app/navigation';
+	import { LogIn } from 'lucide-svelte';
 
 	// `data` comes automatically from the server-side load function
 	export let data;
@@ -30,6 +32,9 @@
 		console.log(url);
 		window.location.href = url;
 	}
+	async function onClickLoginAdmin(){
+		goto('/admin/auth/login');
+	}
 </script>
 
 <div class="h-screen w-screen flex justify-center items-center">
@@ -39,16 +44,21 @@
 				<img src={logo} alt="" class="w-full" />
 			</div>
 			<Card.Header>
-				<Card.Title>
+				<Card.Title class="text-center">
 					<span class="text-xl"> Đăng nhập hệ thống </span></Card.Title
 				>
-				<Card.Description>Hỗ trợ cán bộ giảng viên cập nhật sơ yếu lý lịch</Card.Description>
+				<Card.Description class ="text-center">Hỗ trợ cán bộ giảng viên cập nhật sơ yếu lý lịch</Card.Description>
 			</Card.Header>
 			<Card.Footer class="flex-col gap-2">
+				<Button type="button" class="w-full cursor-pointer" onclick={onClickLoginAdmin}>
+					<LogIn strokeWidth={2.9}/>
+					Đăng nhập dành cho quản lý</Button
+				>
 				<Button type="button" class="w-full cursor-pointer" onclick={onClickLoginGoogle}>
 					<IconBrandGoogleFilled />
-					Đăng nhập bằng Email Google</Button
+					Đăng nhập Google dành cho nhân viên</Button
 				>
+				
 			</Card.Footer>
 		</Card.Root>
 	</div>

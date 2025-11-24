@@ -552,6 +552,11 @@ namespace syll.be.application.Form.Implements
                 .OrderBy(idx => idx)
                 .ToList();
 
+            if (!rowIndexes.Any())
+            {
+                rowIndexes.Add(1);
+            }
+
             var result = new List<GetFormTruongData>();
 
             foreach (var rowIndex in rowIndexes)

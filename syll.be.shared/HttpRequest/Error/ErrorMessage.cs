@@ -27,7 +27,7 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.GoogleSheetUrlErrorInvalid, "URL Google Sheet không hợp lệ hoặc không thể truy cập được" },
             { ErrorCodes.DanhBaErrorNotFound, "Danh bạ không tồn tại"},
             { ErrorCodes.DanhBaErrorNotFoundInToChuc, "Danh bạ không tồn tại trong tổ chức"},
-            { ErrorCodes.FormLoaiErrorNotFound, "Loại form này không tồn tại"},
+            { ErrorCodes.FormLoaiErrorNotFound, "Form chưa được thiết lập. Vui lòng liên hệ admin"},
             { ErrorCodes.FormDanhBaErrorNotFound, "Người dùng trong danh bạ không đăng kí Form này"},
             { ErrorCodes.FormTruongDataErrorNotFound,"Trường dữ liệu không tồn tại"},
             { ErrorCodes.FormLoaiErrorLayoutNotFound, "Layout không tồn tại trong loại form này" },
@@ -41,7 +41,10 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.FormLoaiErrorLayoutOrderInvalid,"Thứ tự layout không hợp lệ" },
             { ErrorCodes.FormLoaiErrorTruongDataNotFound,"Trường data không tồn tại" },
             { ErrorCodes.TemplateErrorTemplateFormLoaiNotFound,"Template Form chưa được thiết lập. Vui lòng liên hệ admin" },
-            { ErrorCodes.ToChucErrorToChucExisted, "Tổ chức đã tồn tại"}
+            { ErrorCodes.ToChucErrorToChucExisted, "Tổ chức đã tồn tại"},
+            { ErrorCodes.FormDataErrorNotFound, "Dữ liệu form không tồn tại"},
+            { ErrorCodes.FormLoaiErrorTableHeadersNotFound, "Tiêu đề bảng của form không tồn tại"},
+            { ErrorCodes.FormLoaiErrorTableCellCountMismatch, "Số lượng ô trong bảng không khớp với số lượng tiêu đề"},
 
         };
 

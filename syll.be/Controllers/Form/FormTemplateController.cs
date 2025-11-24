@@ -40,6 +40,26 @@ namespace syll.be.Controllers.Form
         }
 
 
+        [HttpPost("admin/replace")]
+        public async Task<IActionResult> ReplaceWordFormTemplateAdmin([FromQuery] int idFormLoai, [FromQuery]int idDanhBa)
+        {
+            try
+            {
+                var replaceBytes = await _formTemplateService.ReplaceWordFormTemplateAdmin(idFormLoai,idDanhBa);
+                return File(
+                    replaceBytes,
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    $"SoYeuLyLich_{DateTime.Now:yyyyMMddHHmmss}.docx"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error replacing word template for IdFormLoai={idFormLoai}");
+                return Ok(OkException(ex));
+            }
+        }
+
+
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateSoYeuLyLichTemplate([FromRoute] int idFormLoai)
         {

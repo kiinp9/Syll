@@ -16,6 +16,8 @@ using syll.be.application.DanhBa.Implements;
 using syll.be.application.DanhBa.Interfaces;
 using syll.be.application.Form.Implements;
 using syll.be.application.Form.Interfaces;
+using syll.be.application.Reports.Implements;
+using syll.be.application.Reports.Interfaces;
 using syll.be.application.ToChuc.Implements;
 using syll.be.application.ToChuc.Interfaces;
 using syll.be.domain.Auth;
@@ -235,6 +237,7 @@ builder.Services.AddScoped<IFormService, FormService>();
 builder.Services.AddScoped<IFormLayoutService, FormLayoutService>();
 builder.Services.AddScoped<IFormDataService, FormDataService>();
 builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 #endregion
 
