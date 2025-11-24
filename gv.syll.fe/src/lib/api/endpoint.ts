@@ -20,4 +20,6 @@ export const ENDPOINTS = {
     downloadFormAdmin: '/api/core/form-template/admin/replace',
     getReportTotalNhanVienToChuc: (idFormLoai:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/nhan-vien`,
     getReportNhanVienToChucPaging: (idFormLoai:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/to-chuc/paging`,
+    getReportNhanVienByToChucPaging: (idFormLoai:number, idToChuc:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/to-chuc/${idToChuc}/nhan-vien/paging`,
+    getDashboardData: '/api/core/thong-ke/dashboard',
 }

@@ -57,5 +57,35 @@ namespace syll.be.Controllers.Report
             }
         }
 
+        [Permission(PermissionKeys.ReportView)]
+        [HttpGet("form-loai/{idFormLoai}/to-chuc/{idToChuc}/nhan-vien/paging")]
+        public ApiResponse FindPagingReportDanhBaToChuc([FromQuery] GetThongTinDanhBaToChucReportFindPagingDto dto, [FromRoute] int idFormLoai, [FromRoute] int idToChuc)
+        {
+            try
+            {
+                var data = _reportService.FindPagingDanhBaToChuc(dto, idFormLoai,idToChuc );
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [Permission(PermissionKeys.ReportView)]
+        [HttpGet("dashboard")]
+        public ApiResponse GetDashBoardReport()
+        {
+            try
+            {
+                var data =  _reportService.GetDashBoardReport();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
     }
 }

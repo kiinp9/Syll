@@ -41,7 +41,7 @@ export interface IViewRoleNhanVien{
 }
 
 
-export interface IGetListDropDownForm{
+export interface IGetListDropDownFormLoai{
     id?: number;
     tenFormLoai?: string;
 }

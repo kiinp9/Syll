@@ -30,7 +30,7 @@
 				icon: NewspaperIcon
 			},
 			{
-				url: '#',
+				url: '/admin/notification',
 				title: 'Thông báo',
 				icon: BellIcon
 			},
@@ -40,7 +40,7 @@
 				icon: UsersIcon
 			},
 			{
-				url: '#',
+				url: '/admin/data-sync',
 				title: 'Đồng bộ dữ liệu',
 				icon: UploadIcon
 			},
@@ -50,7 +50,7 @@
 				icon: ChartColumnIcon
 			},
 			{
-				url: '#',
+				url: '/admin/config',
 				title: 'Cấu hình',
 				icon: CogIcon
 			}

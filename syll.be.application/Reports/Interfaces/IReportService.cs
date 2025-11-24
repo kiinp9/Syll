@@ -12,5 +12,8 @@ namespace syll.be.application.Reports.Interfaces
     {
         public  Task<GetReportNhanVienToChucDto> GetReportNhanVienToChuc(int idFormLoai);
         public BaseResponsePagingDto<GetThongTinToChucDanhBaReportDto> FindPagingToChucDanhBa(GetThongTinToChucDanhBaReportFindPagingDto dto,int idFormLoai);
+
+        public BaseResponsePagingDto<GetThongTinDanhBaToChucReportDto> FindPagingDanhBaToChuc(GetThongTinDanhBaToChucReportFindPagingDto dto, int idFormLoai, int idToChuc);
+        public GetDashBoardReportDto GetDashBoardReport();
     }
 }
