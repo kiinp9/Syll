@@ -1,23 +1,29 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { Card, CardContent } from "$lib/components/ui/card";
-	import { Progressbar } from "flowbite-svelte";
 	import { Users, CheckCircle, Clock, AlertTriangle, Building2, Filter, FileDown } from "lucide-svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
-	import { toast } from "svelte-sonner";
+	import { toast } from "$lib/utils/toast.utils.js";
 	import Toaster from "$lib/components/ui/toaster/toaster.svelte";
+	import { ReportConstants } from "$lib/constants/report.constants.js";
 
 	
 	let { data } = $props();
 
     let searchQuery = $state('');
-    let statusFilter = $state('all');
+    let statusFilter = $state<number | null>(null);
+	let selectedToChuc = $state<number | null>(null);
+	let nhanVienSection: HTMLDivElement;
     
-    let currentPageToChucNhanVien = $derived(data.toChucNhanVien.currentPage || 1);
-    let totalPagesToChucNhanVien = $derived(data.toChucNhanVien.totalPages || 1);
-     function onPageChange(page: number) {
+    let currentPageToChuc = $derived(data.toChuc.currentPage || 1);
+    let totalPagesToChuc = $derived(data.toChuc.totalPages || 1);
+    
+    let currentPageNhanVien = $derived(data.nhanVien.currentPage || 1);
+    let totalPagesNhanVien = $derived(data.nhanVien.totalPages || 1);
+    
+    function onPageChange(page: number) {
         goto(`?page=${page}`, { 
             keepFocus: true, 
             noScroll: true,
@@ -25,20 +31,107 @@
         });
     }
 
-    function getPageToChucNhanVienNumbers() {
+	const filterOptions = [
+		{ value: ReportConstants.TatCa, label: 'Tất cả' },
+		{ value: ReportConstants.DaCheck, label: 'Đã check' },
+		{ value: ReportConstants.ChuaCheck, label: 'Chưa check' },
+		{ value: ReportConstants.ChuaImportData, label: 'Chưa import data' },
+	];
+
+	function getFilterLabel(value?: number) {
+		if (!value) return 'Không xác định';
+        return filterOptions.find(opt => opt.value === value)?.label || 'Không xác định';
+	}
+
+    function getPageToChucNumbers() {
         const pages = [];
-        for (let i = 1; i <= totalPagesToChucNhanVien; i++) {
+        for (let i = 1; i <= totalPagesToChuc; i++) {
+            pages.push(i);
+        }
+        return pages;
+    }
+
+    function getPageNhanVienNumbers() {
+        const pages = [];
+        for (let i = 1; i <= totalPagesNhanVien; i++) {
             pages.push(i);
         }
         return pages;
     }
 
     function exportToCSV() {
-        toast.success('Chức năng đang được phát triển!');
+        toast.success("Tính năng đang được phát triển!");
+    }
+
+    function selectDepartment(deptId: number) {
+        selectedToChuc = deptId;
+        goto(`?page=1&idToChuc=${deptId}`, { invalidateAll: true }).then(() => {
+            setTimeout(() => {
+                nhanVienSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+    }
+
+    function onNhanVienPageChange(page: number) {
+        goto(`?page=${page}&idToChuc=${selectedToChuc}&keyword=${searchQuery}&status=${statusFilter || ''}`, { 
+            keepFocus: true, 
+            noScroll: true,
+            invalidateAll: false
+        });
+    }
+
+    function handleSearchChange() {
+        goto(`?page=1&idToChuc=${selectedToChuc}&keyword=${searchQuery}&status=${statusFilter || ''}`, { 
+            keepFocus: true,
+			noScroll: true,
+            invalidateAll: false
+        });
+    }
+
+    function handleStatusFilterChange() {
+        goto(`?page=1&idToChuc=${selectedToChuc}&keyword=${searchQuery}&status=${statusFilter || ''}`, { 
+            keepFocus: true,
+			noScroll: true,
+            invalidateAll: false
+        });
+    }
+
+    function getStatusLabel(status?: number): string {
+        switch (status) {
+            case ReportConstants.DaCheck:
+                return 'Đã check';
+            case ReportConstants.ChuaCheck:
+                return 'Chưa check';
+            case ReportConstants.ChuaImportData:
+                return 'Chưa import data';
+            default:
+                return 'Không xác định';
+        }
+    }
+
+    function getStatusBadgeClass(status?: number): string {
+        switch (status) {
+            case ReportConstants.DaCheck:
+                return "bg-green-100 text-green-700";
+            case ReportConstants.ChuaCheck:
+                return "bg-amber-100 text-amber-700";
+            case ReportConstants.ChuaImportData:
+                return "bg-red-100 text-red-700";
+            default:
+                return "bg-gray-100 text-gray-700";
+        }
+    }
+
+    function formatDate(date?: Date | string): string {
+        if (!date) return 'N/A';
+        const d = new Date(date);
+        return d.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
 
 </script>
+
 <Toaster />
+
 <div class="mb-6 flex flex-row justify-between items-center">
 	<div>
 		<h1 class="text-3xl font-bold text-gray-900">Thống kê chi tiết thông tin form</h1>
@@ -112,10 +205,13 @@
 			<p class="text-gray-500 text-sm">Thống kê theo từng phòng ban</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			{#each data.toChucNhanVien?.data || [] as dept}
-				<Card class="shadow-sm">
-					<CardContent class="p-4">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+			{#each data.toChuc?.data || [] as dept}
+				<Card 
+					class="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+					onclick={() => selectDepartment(dept.idToChuc!)}
+				>
+					<CardContent class="p-3">
 						<div class="space-y-3">
 							<div class="flex items-start gap-3">
 								<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -134,7 +230,18 @@
 										{dept.progress?.toFixed(1) || 0}%
 									</span>
 								</div>
-								<Progressbar progress={dept.progress || 0} size="h-2" color="blue" />
+								
+								<div class="flex h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+									<div 
+										class="bg-blue-600 transition-all duration-300"
+										style="width: {dept.progress || 0}%"
+									></div>
+									<div 
+										class="bg-gray-300"
+										style="width: {100 - (dept.progress || 0)}%"
+									></div>
+								</div>
+								
 								<div class="flex items-center justify-between text-xs">
 									<span class="text-green-600 flex items-center gap-1">
 										<CheckCircle class="w-3 h-3" />
@@ -157,17 +264,17 @@
 			<Button 
 				variant="outline" 
 				size="sm"
-				disabled={currentPageToChucNhanVien === 1}
-				onclick={() => onPageChange(currentPageToChucNhanVien - 1)}
+				disabled={currentPageToChuc === 1}
+				onclick={() => onPageChange(currentPageToChuc - 1)}
 			>
 				Previous
 			</Button>
 			
-			{#each getPageToChucNhanVienNumbers() as page}
+			{#each getPageToChucNumbers() as page}
 				<Button 
-					variant={currentPageToChucNhanVien === page ? "default" : "outline"}
+					variant={currentPageToChuc === page ? "default" : "outline"}
 					size="sm"
-					class={currentPageToChucNhanVien === page ? "bg-blue-600 text-white" : ""}
+					class={currentPageToChuc === page ? "bg-blue-600 text-white" : ""}
 					onclick={() => onPageChange(page)}
 				>
 					{page}
@@ -177,8 +284,8 @@
 			<Button 
 				variant="outline" 
 				size="sm"
-				disabled={currentPageToChucNhanVien === totalPagesToChucNhanVien}
-				onclick={() => onPageChange(currentPageToChucNhanVien + 1)}
+				disabled={currentPageToChuc === totalPagesToChuc}
+				onclick={() => onPageChange(currentPageToChuc + 1)}
 			>
 				Next
 			</Button>
@@ -186,7 +293,7 @@
 	</CardContent>
 </Card>
 
-<Card class="shadow-xl">
+<Card class="shadow-xl mb-6">
 	<CardContent class="p-6">
 		<div class="flex items-center justify-between mb-6">
 			<div class="flex items-center gap-2">
@@ -205,6 +312,7 @@
 				<Input
 					id="search-input"
 					bind:value={searchQuery}
+					onkeydown={(e) => e.key === 'Enter' && handleSearchChange()}
 					placeholder="Search by name or email..."
 					class="w-full"
 				/>
@@ -214,14 +322,107 @@
 				<select 
 					id="status-filter"
 					bind:value={statusFilter}
+					onchange={handleStatusFilterChange}
 					class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 				>
-					<option value="all">Tất cả</option>
-					<option value="completed">Đã kiểm tra</option>
-					<option value="pending">Chưa kiểm tra</option>
-					<option value="not-imported">Chưa được import data</option>
+					<option value={null}>Chọn filter</option>
+					{#each filterOptions as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
 				</select>
 			</div>
 		</div>
 	</CardContent>
 </Card>
+
+<div bind:this={nhanVienSection}>
+	<Card class="shadow-xl">
+		<CardContent class="p-6">
+			<div class="mb-6">
+				<h2 class="text-2xl font-bold text-gray-900">Staff Status & Activity</h2>
+				<p class="text-gray-500 text-sm">
+					{#if selectedToChuc && data.nhanVien?.data.length > 0}
+						Showing {data.nhanVien.data.length} entries
+					{:else}
+						Showing 0 entries
+					{/if}
+				</p>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="w-full">
+					<thead class="border-b bg-gray-50">
+						<tr>
+							<th class="text-left p-4 font-semibold text-gray-700">Name</th>
+							<th class="text-left p-4 font-semibold text-gray-700">Email</th>
+							<th class="text-left p-4 font-semibold text-gray-700">Department</th>
+							<th class="text-left p-4 font-semibold text-gray-700">Status</th>
+							<th class="text-left p-4 font-semibold text-gray-700">Last Modified</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#if selectedToChuc && data.nhanVien?.data.length > 0}
+							{#each data.nhanVien.data as staff}
+								<tr class="border-b hover:bg-gray-50 transition-colors">
+									<td class="p-4 text-sm font-medium text-gray-900">{staff.hoVaTen}</td>
+									<td class="p-4 text-sm text-gray-600">{staff.email}</td>
+									<td class="p-4 text-sm text-gray-600">{staff.toChuc?.tenToChuc || 'N/A'}</td>
+									<td class="p-4 text-sm">
+										<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusBadgeClass(staff.status)}">
+											{getStatusLabel(staff.status)}
+										</span>
+									</td>
+									<td class="p-4 text-sm text-gray-600">
+										{formatDate(staff.lastModified)}
+									</td>
+								</tr>
+							{/each}
+						{:else}
+							<tr>
+								<td colspan="5" class="p-4 text-center text-gray-500">
+									Chọn một tổ chức để xem danh sách nhân viên
+								</td>
+							</tr>
+						{/if}
+					</tbody>
+				</table>
+			</div>
+
+			{#if selectedToChuc && data.nhanVien?.data.length > 0}
+				<div class="flex items-center justify-between pt-4 text-sm text-gray-600">
+					<span>Page {currentPageNhanVien} of {totalPagesNhanVien}</span>
+					<div class="flex gap-2">
+						<Button 
+							variant="outline" 
+							size="sm"
+							disabled={currentPageNhanVien === 1}
+							onclick={() => onNhanVienPageChange(currentPageNhanVien - 1)}
+						>
+							Previous
+						</Button>
+						
+						{#each getPageNhanVienNumbers() as page}
+							<Button 
+								variant={currentPageNhanVien === page ? "default" : "outline"}
+								size="sm"
+								class={currentPageNhanVien === page ? "bg-blue-600 text-white" : ""}
+								onclick={() => onNhanVienPageChange(page)}
+							>
+								{page}
+							</Button>
+						{/each}
+
+						<Button 
+							variant="outline" 
+							size="sm"
+							disabled={currentPageNhanVien === totalPagesNhanVien}
+							onclick={() => onNhanVienPageChange(currentPageNhanVien + 1)}
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			{/if}
+		</CardContent>
+	</Card>
+</div>

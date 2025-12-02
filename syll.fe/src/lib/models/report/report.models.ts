@@ -15,3 +15,19 @@ export interface IViewNhanVienToChucReport {
     totalNhanVienToChucChuaCheckForm?: number;
     progress?: number;
 }
+
+
+export interface IViewNhanVienByToChucReport {
+    id?: number;
+    hoVaTen?: string;
+    email?: string;
+    status?: number;
+    lastModified?: Date;
+    toChuc?: IViewToChucNhanVien;
+}
+
+
+export interface IViewToChucNhanVien {
+    id?: number;
+    tenToChuc? : string;
+}
