@@ -13,8 +13,9 @@ namespace syll.be.application.ChienDich.Interfaces
         public void CreateChienDich(CreateChienDichDto dto);
 
         public void UpdateChienDich(UpdateChienDichDto dto);
-        public BaseResponsePagingDto<ViewChienDichDto> FindPagingChienDich(FindPagingChienDichDto dto);
+        public Task<BaseResponsePagingDto<ViewChienDichDto>> FindPagingChienDich(FindPagingChienDichDto dto);
         public void DeleteChienDich(int id);
         public  Task<BaseResponsePagingDto<ViewFormLoaiByIdChienDichDto>> FindPagingFormLoaiByIdChienDich(FindPagingFormLoaiByIdChienDichDto dto);
+        public  Task<ViewChienDichByIdDto> FindChienDichById(int idChienDich);
     }
 }

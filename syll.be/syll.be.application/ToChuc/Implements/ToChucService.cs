@@ -46,7 +46,7 @@ namespace syll.be.application.ToChuc.Implements
             _logger.LogInformation($"{nameof(Create)}  dto = {JsonSerializer.Serialize(dto)}");
             var vietnamNow = GetVietnamTime();
 
-            if (dto.LoaiToChuc != ToChucConstants.DaiHocCongLap && dto.LoaiToChuc != ToChucConstants.PhongBan && dto.LoaiToChuc != ToChucConstants.KhoaDaoTao)
+            if (dto.LoaiToChuc != ToChucConstants.DaiHocCongLap && dto.LoaiToChuc != ToChucConstants.PhongBan && dto.LoaiToChuc != ToChucConstants.KhoaDaoTao && dto.LoaiToChuc != ToChucConstants.Khac)
             {
                 throw new UserFriendlyException(ErrorCodes.ToChucErrorLoaiToChucNotFound);
             }
@@ -84,7 +84,7 @@ namespace syll.be.application.ToChuc.Implements
             var isSuperAdmin = IsSuperAdmin();
             var existingToChuc = _syllDbContext.ToChucs.FirstOrDefault(x => x.Id == idToChuc && (isSuperAdmin || x.CreatedBy == currentUserId) && !x.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.ToChucErrorNotFound);
-            if (dto.LoaiToChuc != ToChucConstants.DaiHocCongLap && dto.LoaiToChuc != ToChucConstants.PhongBan && dto.LoaiToChuc != ToChucConstants.KhoaDaoTao)
+            if (dto.LoaiToChuc != ToChucConstants.DaiHocCongLap && dto.LoaiToChuc != ToChucConstants.PhongBan && dto.LoaiToChuc != ToChucConstants.KhoaDaoTao && dto.LoaiToChuc != ToChucConstants.Khac)
             {
                 throw new UserFriendlyException(ErrorCodes.ToChucErrorLoaiToChucNotFound);
             }

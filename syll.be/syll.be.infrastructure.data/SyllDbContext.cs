@@ -35,6 +35,8 @@ namespace syll.be.infrastructure.data
         public DbSet<DropDown> DropDowns { get; set; }
         public DbSet<ChienDich> ChienDiches { get; set; }
         public DbSet<ChienDichFormLoai> ChienDichFormLoais { get; set; }
+
+        public DbSet<ChienDichToChuc> ChienDichToChucs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -110,6 +112,12 @@ namespace syll.be.infrastructure.data
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<ChienDichFormLoai>(entity =>
+            {
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+           
+            modelBuilder.Entity<ChienDichToChuc>(entity =>
             {
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");

@@ -62,7 +62,8 @@
     const loaiToChucOptions = [
         { value: ToChucConstants.DaiHocCongLap, label: "Đại học công lập" },
         { value: ToChucConstants.KhoaDaoTao, label: "Khoa đào tạo" },
-        { value: ToChucConstants.PhongBan, label: "Phòng ban" }
+        { value: ToChucConstants.PhongBan, label: "Phòng ban" },
+        { value: ToChucConstants.Khac, label: "Khác"}
     ];
     function getLoaiToChucLabel(value?: number): string {
         if (!value) return 'Không xác định';

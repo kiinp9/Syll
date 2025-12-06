@@ -6,6 +6,7 @@
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar';
+	import { MegaphoneIcon } from 'lucide-svelte';
 
 	let { children, data } = $props();
 </script>
@@ -20,9 +21,9 @@
 				// icon: HouseIcon,
 			},
 			{
-				url: '/gv/form',
-				title: 'Quản lý form',
-				icon: NewspaperIcon
+				url: '/gv/campaign',
+				title: 'Quản lý chiến dịch',
+				icon: MegaphoneIcon
 			},
 			{
 				url: '#',

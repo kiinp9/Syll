@@ -13,11 +13,7 @@ namespace syll.be.application.ChienDich.Dtos
         public DateTime? ThoiGianBatDau { get; set; }
         public DateTime? ThoiGianKetThuc {  get; set; }
 
-        public List<AddFormLoaiChienDichDto> FormLoais { get; set; } = new List<AddFormLoaiChienDichDto>();
+        public List<int> FormLoais { get; set; } = new List<int>();
     }
 
-    public class AddFormLoaiChienDichDto
-    {
-        public int Id { get; set; }
-    }
 }

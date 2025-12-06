@@ -54,6 +54,7 @@ namespace syll.be.shared.HttpRequest.Error
         public const int TemplateErrorTemplateFormLoaiNotFound = 601;
 
         public const int ChienDichErrorNotFound = 701;
+        public const int ChienDichErrorFormLoaiNotFoundInChienDich = 702;
 
     }
 

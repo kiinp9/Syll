@@ -10,6 +10,7 @@
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar';
+	import { MegaphoneIcon } from 'lucide-svelte';
 
 	let { children, data} = $props();
 
@@ -25,9 +26,9 @@
 				// icon: HouseIcon,
 			},
 			{
-				url: '/admin/form-management',
-				title: 'Quản lý form',
-				icon: NewspaperIcon
+				url: '/admin/campaign-management',
+				title: 'Quản lý chiến dịch',
+				icon: MegaphoneIcon
 			},
 			{
 				url: '/admin/notification',

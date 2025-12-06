@@ -58,13 +58,13 @@ namespace syll.be.Controllers.ChienDich
         }
 
 
-        [Permission(PermissionKeys.ChienDichView)]
+        //[Permission(PermissionKeys.ChienDichView)]
         [HttpGet("")]
-        public ApiResponse FindPaging([FromQuery] FindPagingChienDichDto dto)
+        public async Task<ApiResponse> FindPaging([FromQuery] FindPagingChienDichDto dto)
         {
             try
             {
-                var data = _chienDichService.FindPagingChienDich(dto);
+                var data = await _chienDichService.FindPagingChienDich(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -72,6 +72,23 @@ namespace syll.be.Controllers.ChienDich
                 return OkException(ex);
             }
         }
+
+
+        //[Permission(PermissionKeys.ChienDichView)]
+        [HttpGet("{idChienDich}")]
+        public async Task<ApiResponse> FindChienDichById([FromRoute] int idChienDich)
+        {
+            try
+            {
+                var data = await _chienDichService.FindChienDichById(idChienDich);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
 
 
         [Permission(PermissionKeys.ChienDichDelete)]
@@ -90,8 +107,8 @@ namespace syll.be.Controllers.ChienDich
         }
 
 
-        [Permission(PermissionKeys.ChienDichView)]
-        [HttpGet("form-loai")]
+        //[Permission(PermissionKeys.ChienDichView)]
+        [HttpGet("form")]
         public async Task<ApiResponse> FindPagingFormLoaiByIdChienDich([FromQuery] FindPagingFormLoaiByIdChienDichDto dto)
         {
             try

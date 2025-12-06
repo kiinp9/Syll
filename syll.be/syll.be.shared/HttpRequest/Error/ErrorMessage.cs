@@ -45,7 +45,8 @@ namespace syll.be.shared.HttpRequest.Error
             { ErrorCodes.FormDataErrorNotFound, "Dữ liệu form không tồn tại"},
             { ErrorCodes.FormLoaiErrorTableHeadersNotFound, "Tiêu đề bảng của form không tồn tại"},
             { ErrorCodes.FormLoaiErrorTableCellCountMismatch, "Số lượng ô trong bảng không khớp với số lượng tiêu đề"},
-            { ErrorCodes.ChienDichErrorNotFound, "Chiến dịch không tồn tại" }
+            { ErrorCodes.ChienDichErrorNotFound, "Chiến dịch không tồn tại" },
+            { ErrorCodes.ChienDichErrorFormLoaiNotFoundInChienDich, "Loại form này không tồn tại trong chiến dịch được chỉ định" },
 
         };
 

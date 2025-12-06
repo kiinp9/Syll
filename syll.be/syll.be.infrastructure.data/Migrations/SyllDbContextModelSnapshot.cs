@@ -523,11 +523,57 @@ namespace syll.be.infrastructure.data.Migrations
                     b.Property<int>("IdFormLoai")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsShow")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex(new[] { "Id" }, "IX_ChienDichFormLoai");
 
                     b.ToTable("ChienDichFormLoai", "core");
+                });
+
+            modelBuilder.Entity("syll.be.domain.ChienDich.ChienDichToChuc", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IdChienDich")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdToChuc")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Id" }, "IX_ChienDichToChuc");
+
+                    b.ToTable("ChienDichToChuc", "core");
                 });
 
             modelBuilder.Entity("syll.be.domain.DanhBa.DanhBa", b =>
@@ -766,15 +812,9 @@ namespace syll.be.infrastructure.data.Migrations
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsShow")
-                        .HasColumnType("bit");
-
                     b.Property<string>("MoTa")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
 
                     b.Property<string>("TenForm")
                         .IsRequired()

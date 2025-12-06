@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using syll.be.application.Auth.Dtos.User;
+using syll.be.application.ChienDich.Dtos;
 using syll.be.application.DanhBa.Dtos;
 using syll.be.application.Form.Dtos.Form;
 using syll.be.application.Reports.Dtos;
@@ -25,7 +26,8 @@ namespace syll.be.application.Base
             //CreateMap<domain.DanhBa.DanhBa, ViewDanhBaDto>();
             CreateMap<FormLoai, ViewFormLoaiDto>();
             //CreateMap<domain.ToChuc.ToChuc, GetThongTinToChucDanhBaReportDto>();
-            
+            CreateMap<domain.ChienDich.ChienDich, ViewChienDichDto>();
+            CreateMap<domain.Form.FormLoai, ViewFormLoaiByIdChienDichDto>();
 
         } 
         }

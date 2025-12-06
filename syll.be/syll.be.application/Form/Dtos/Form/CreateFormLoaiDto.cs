@@ -9,6 +9,7 @@ namespace syll.be.application.Form.Dtos.Form
 {
     public class CreateFormLoaiDto
     {
+        public int IdChienDich { get; set; } 
         public string TenLoaiForm { get; set; } = string.Empty;
         public string MoTa { get; set; } = string.Empty;
         public DateTime? ThoiGianBatDau { get; set; }

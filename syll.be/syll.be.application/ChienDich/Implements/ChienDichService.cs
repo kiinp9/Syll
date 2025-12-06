@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using syll.be.application.Base;
@@ -37,15 +38,12 @@ namespace syll.be.application.ChienDich.Implements
         }
 
 
-        public void CreateChienDich( CreateChienDichDto dto)
+        public void CreateChienDich(CreateChienDichDto dto)
         {
-            _logger.LogInformation($"{nameof(CreateChienDich)}  dto = {JsonSerializer.Serialize(dto)}" );
-
+            _logger.LogInformation($"{nameof(CreateChienDich)}  dto = {JsonSerializer.Serialize(dto)}");
             var vietNamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
             var isSuperAdmin = IsSuperAdmin();
-
-
             var chienDich = new domain.ChienDich.ChienDich
             {
                 TenChienDich = dto.TenChienDich,
@@ -55,21 +53,19 @@ namespace syll.be.application.ChienDich.Implements
                 CreatedBy = currentUserId,
                 CreatedDate = vietNamNow,
             };
-
-            _syllDbContext.ChienDiches.Add( chienDich );
+            _syllDbContext.ChienDiches.Add(chienDich);
             _syllDbContext.SaveChanges();
-
             var chienDichId = chienDich.Id;
-
-            if( dto.FormLoais != null && dto.FormLoais.Any())
+            if (dto.FormLoais != null && dto.FormLoais.Any())
             {
-                var chienDichFormLoaiList = dto.FormLoais.Select(x => new ChienDichFormLoai
+                var chienDichFormLoaiList = dto.FormLoais.Select((id, index) => new ChienDichFormLoai
                 {
                     IdChienDich = chienDichId,
-                    IdFormLoai = x.Id,
+                    IdFormLoai = id,
+                    Order = index + 1,
+                    IsShow = true,
                     CreatedBy = currentUserId,
                     CreatedDate = vietNamNow,
-
                 }).ToList();
                 _syllDbContext.ChienDichFormLoais.AddRange(chienDichFormLoaiList);
                 _syllDbContext.SaveChanges();
@@ -77,70 +73,94 @@ namespace syll.be.application.ChienDich.Implements
         }
 
 
-        public void UpdateChienDich (UpdateChienDichDto dto)
+        public void UpdateChienDich(UpdateChienDichDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateChienDich)} dto = {JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
             var isSuperAdmin = IsSuperAdmin();
             var vietNamNow = GetVietnamTime();
-
             var chienDich = _syllDbContext.ChienDiches.FirstOrDefault(x => x.Id == dto.IdChienDich && !x.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorNotFound);
-
             chienDich.TenChienDich = dto.TenChienDich;
             chienDich.MoTa = dto.MoTa;
-            chienDich.ThoiGianBatDau = dto.ThoiGíanBatDau;
+            chienDich.ThoiGianBatDau = dto.ThoiGianBatDau;
             chienDich.ThoiGianKetThuc = dto.ThoiGianKetThuc;
-
-
-            _syllDbContext.ChienDiches.Update( chienDich );
+            _syllDbContext.ChienDiches.Update(chienDich);
             _syllDbContext.SaveChanges();
-
-
             if (dto.FormLoais != null && dto.FormLoais.Any())
             {
                 var existingChienDichFormLoaiList = _syllDbContext.ChienDichFormLoais
                                                     .Where(x => x.IdChienDich == dto.IdChienDich && !x.Deleted)
                                                     .ToList();
-                
-
-                var dtoFormLoaiIds =dto.FormLoais.Select( x => x.IdFormLoai).ToList();
-                var existingFormLoaiIds = existingChienDichFormLoaiList.Select(x => x.IdFormLoai ).ToList();
-
-                var deleteChienDichFormLoaiList = existingChienDichFormLoaiList.Where( x => !dtoFormLoaiIds.Contains(x.IdFormLoai)).ToList();
-                foreach(var deleteChienDichFormLoai in deleteChienDichFormLoaiList)
+                var dtoFormLoaiIds = dto.FormLoais;
+                var existingFormLoaiIds = existingChienDichFormLoaiList.Select(x => x.IdFormLoai).ToList();
+                var deleteChienDichFormLoaiList = existingChienDichFormLoaiList.Where(x => !dtoFormLoaiIds.Contains(x.IdFormLoai)).ToList();
+                foreach (var deleteChienDichFormLoai in deleteChienDichFormLoaiList)
                 {
                     deleteChienDichFormLoai.DeletedDate = vietNamNow;
                     deleteChienDichFormLoai.Deleted = true;
                     deleteChienDichFormLoai.DeletedBy = currentUserId;
                 }
-
                 var newChienDichFormLoaiIds = dtoFormLoaiIds.Where(x => !existingFormLoaiIds.Contains(x)).ToList();
-                var newChienDichFormLoai = newChienDichFormLoaiIds.Select(x => new ChienDichFormLoai
+                var newChienDichFormLoai = newChienDichFormLoaiIds.Select((x, index) => new ChienDichFormLoai
                 {
                     IdChienDich = dto.IdChienDich,
                     IdFormLoai = x,
+                    Order = dtoFormLoaiIds.IndexOf(x) + 1,
                     CreatedBy = currentUserId,
                     CreatedDate = vietNamNow,
                 }).ToList();
-
                 _syllDbContext.ChienDichFormLoais.AddRange(newChienDichFormLoai);
                 _syllDbContext.SaveChanges();
-
             }
         }
 
-
-        public BaseResponsePagingDto<ViewChienDichDto> FindPagingChienDich (FindPagingChienDichDto dto)
+        public async Task<BaseResponsePagingDto<ViewChienDichDto>> FindPagingChienDich(FindPagingChienDichDto dto)
         {
             _logger.LogInformation($"{nameof(FindPagingChienDich)} dto = {JsonSerializer.Serialize(dto)}");
-            var query = from cd in _syllDbContext.ChienDiches
-                        where !cd.Deleted 
-                              &&(string.IsNullOrEmpty(dto.Keyword)
-                              || cd.TenChienDich.Contains(dto.Keyword))
-                              orderby cd.Id 
-                              select cd;
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = IsSuperAdmin();
+            var danhBaId = await GetCurrentDanhBaId();
 
+            var query = isSuperAdmin
+                ? from cd in _syllDbContext.ChienDiches
+
+                  where !cd.Deleted
+                        && (string.IsNullOrEmpty(dto.Keyword)
+                        || cd.TenChienDich.Contains(dto.Keyword))
+                  orderby cd.Id
+                  select new ViewChienDichDto
+                  {
+                      Id = cd.Id,
+                      TenChienDich = cd.TenChienDich,
+                      MoTa = cd.MoTa,
+                      NgayTao = cd.CreatedDate,
+                      ThoiGianBatDau = cd.ThoiGianBatDau,
+                      ThoiGianKetThuc = cd.ThoiGianKetThuc
+                  }
+                : from cd in _syllDbContext.ChienDiches
+                        join cdtc in _syllDbContext.ChienDichToChucs
+                        on cd.Id equals cdtc.IdChienDich into cdtcGroup
+                        from cdtc in cdtcGroup.DefaultIfEmpty()
+                        join tcdb in _syllDbContext.ToChucDanhBa
+                        on cdtc.IdToChuc equals tcdb.IdToChuc into tcdbGroup
+                        from tcdb in tcdbGroup.DefaultIfEmpty()
+                        where !cd.Deleted
+                              && (cdtc == null || !cdtc.Deleted)
+                              && (tcdb == null || !tcdb.Deleted)
+                              && (string.IsNullOrEmpty(dto.Keyword)
+                                  || cd.TenChienDich.Contains(dto.Keyword))
+                              && (isSuperAdmin || (tcdb != null && danhBaId == tcdb.IdDanhBa))
+                        orderby cd.Id
+                        select new ViewChienDichDto
+                        {
+                            Id = cd.Id,
+                            TenChienDich = cd.TenChienDich,
+                            MoTa = cd.MoTa,
+                            NgayTao = cd.CreatedDate,
+                            ThoiGianBatDau = cd.ThoiGianBatDau,
+                            ThoiGianKetThuc = cd.ThoiGianKetThuc
+                        };
 
             var data = query.Paging(dto).ToList();
             var items = _mapper.Map<List<ViewChienDichDto>>(data);
@@ -152,11 +172,71 @@ namespace syll.be.application.ChienDich.Implements
             return response;
         }
 
+        public async Task<ViewChienDichByIdDto> FindChienDichById(int idChienDich)
+        {
+            _logger.LogInformation($"{nameof(FindChienDichById)} idChienDich = {idChienDich}");
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = IsSuperAdmin();
+            var danhBaId = await GetCurrentDanhBaId();
+
+            var query = from cd in _syllDbContext.ChienDiches
+                        where !cd.Deleted && cd.Id == idChienDich
+                        join cdfl in _syllDbContext.ChienDichFormLoais
+                        on cd.Id equals cdfl.IdChienDich
+                        join fl in _syllDbContext.FormLoais
+                        on cdfl.IdFormLoai equals fl.Id
+                        join cdtc in _syllDbContext.ChienDichToChucs
+                        on cd.Id equals cdtc.IdChienDich
+                        join tcdb in _syllDbContext.ToChucDanhBa
+                        on cdtc.IdToChuc equals tcdb.IdToChuc
+                        where !cdfl.Deleted && !fl.Deleted && !cdtc.Deleted && !tcdb.Deleted
+                              && (isSuperAdmin || danhBaId == tcdb.IdDanhBa)
+                        select new
+                        {
+                            cd.Id,
+                            cd.TenChienDich,
+                            cd.MoTa,
+                            cd.ThoiGianBatDau,
+                            cd.ThoiGianKetThuc,
+                            FormLoai = new ViewFormLoaisChienDichDto
+                            {
+                                IdFormLoai = fl.Id,
+                                TenFormLoai = fl.TenForm
+                            }
+                        };
+
+            var data = query.ToList();
+            if (!data.Any()) return null;
+
+            var first = data.First();
+            return new ViewChienDichByIdDto
+            {
+                Id = first.Id,
+                TenChienDich = first.TenChienDich,
+                MoTa = first.MoTa,
+                ThoiGianBatDau = first.ThoiGianBatDau,
+                ThoiGianKetThuc = first.ThoiGianKetThuc,
+                FormLoais = data.Select(x => x.FormLoai).ToList()
+            };
+        }
+
         public async Task<BaseResponsePagingDto<ViewFormLoaiByIdChienDichDto>> FindPagingFormLoaiByIdChienDich(FindPagingFormLoaiByIdChienDichDto dto)
         {
-            var currentUserId = await GetCurrentDanhBaId();
+            var currentUserId = getCurrentUserId;
+            var isSuperAdmin = IsSuperAdmin();
+            var danhBaId = await GetCurrentDanhBaId();
             _logger.LogInformation($"{nameof(FindPagingFormLoaiByIdChienDich)} dto = {JsonSerializer.Serialize(dto)}");
-            var query = from fl in _syllDbContext.FormLoais
+            var query = isSuperAdmin
+                        ? (from fl in _syllDbContext.FormLoais
+                        join cd in _syllDbContext.ChienDichFormLoais
+                        on fl.Id equals cd.IdFormLoai
+                        where !fl.Deleted
+                        && !cd.Deleted
+                        && cd.IsShow
+                        && cd.IdChienDich == dto.IdChienDich
+                        orderby cd.Order
+                        select fl)
+                        :(from fl in _syllDbContext.FormLoais
                         join cd in _syllDbContext.ChienDichFormLoais
 
                         on fl.Id equals cd.IdFormLoai
@@ -164,10 +244,11 @@ namespace syll.be.application.ChienDich.Implements
                         on fl.Id equals fld.IdFormLoai 
                         where !fl.Deleted 
                         && !cd.Deleted
+                        && cd.IsShow
                         && cd.IdChienDich == dto.IdChienDich
-                        && fld.IdDanhBa == currentUserId
-                        orderby fl.Order
-                        select cd;
+                        && (isSuperAdmin || fld.IdDanhBa == danhBaId)
+                        orderby cd.Order
+                        select fl);
 
             var data = query.Paging(dto).ToList();
             var items = _mapper.Map<List<ViewFormLoaiByIdChienDichDto>>(data);
@@ -181,7 +262,7 @@ namespace syll.be.application.ChienDich.Implements
 
 
             var lastModifiedDates = _syllDbContext.FormDatas
-                .Where(x => formLoaiIds.Contains(x.IdFormLoai) && !x.Deleted && x.IdDanhBa == currentUserId)
+                .Where(x => formLoaiIds.Contains(x.IdFormLoai) && !x.Deleted && x.IdDanhBa == danhBaId)
                 .GroupBy(x => x.IdFormLoai)
                 .Select(g => new
                 {
@@ -189,11 +270,27 @@ namespace syll.be.application.ChienDich.Implements
                     LastModified = g.Max(x => x.ModifiedDate)
                 })
                 .ToDictionary(x => x.IdFormLoai, x => x.LastModified);
+            var createdDate = _syllDbContext.FormLoais
+                 .Where(x => formLoaiIds.Contains(x.Id) && !x.Deleted)
+                 .Select(x => new { x.Id, x.CreatedDate })
+                 .ToDictionary(x => x.Id, x => x.CreatedDate);
+            var thoiGianBatDau = _syllDbContext.FormLoais
+                 .Where(x => formLoaiIds.Contains(x.Id) && !x.Deleted)
+                 .Select(x => new { x.Id, x.ThoiGianBatDau })
+                 .ToDictionary(x => x.Id, x => x.ThoiGianBatDau);
+            var thoiGianKetThuc = _syllDbContext.FormLoais
+                 .Where(x => formLoaiIds.Contains(x.Id) && !x.Deleted)
+                 .Select(x => new { x.Id, x.ThoiGianKetThuc })
+                 .ToDictionary(x => x.Id, x => x.ThoiGianKetThuc);
 
             foreach (var item in items)
             {
+                
                 item.TongSoTruong = truongCounts.GetValueOrDefault(item.Id, 0);
                 item.ThoiGianCapNhatGanNhat = lastModifiedDates.GetValueOrDefault(item.Id);
+                item.ThoiGianTao = createdDate.GetValueOrDefault(item.Id);
+                item.ThoiGianBatDau = thoiGianBatDau.GetValueOrDefault(item.Id);
+                item.ThoiGianKetThuc = thoiGianKetThuc.GetValueOrDefault(item.Id);
             }
 
             return new BaseResponsePagingDto<ViewFormLoaiByIdChienDichDto>

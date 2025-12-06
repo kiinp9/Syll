@@ -80,12 +80,12 @@ namespace syll.be.Controllers.Form
 
 
         [Permission(PermissionKeys.FormDelete)]
-        [HttpDelete("{id}")]
-        public ApiResponse Delete([FromRoute] int id)
+        [HttpDelete("{id}/chien-dich/{idChienDich}")]
+        public ApiResponse Delete([FromRoute] int id, [FromRoute] int idChienDich)
         {
             try
             {
-                _formService.Delete(id);
+                _formService.Delete(id, idChienDich);
                 return new();
             }
             catch (Exception ex)
@@ -97,12 +97,12 @@ namespace syll.be.Controllers.Form
 
 
         //[Permission(PermissionKeys.FormView)]
-        [HttpGet("{id}")]
-        public ApiResponse GetFormLoaiById([FromRoute] int id)
+        [HttpGet("{id}/chien-dich/{idChienDich}")]
+        public ApiResponse GetFormLoaiById([FromRoute] int id, [FromRoute] int idChienDich)
         {
             try
             {
-                var result = _formService.GetFormLoaiById(id);
+                var result = _formService.GetFormLoaiById(id,idChienDich);
                 return new(result);
             }
             catch (Exception ex)

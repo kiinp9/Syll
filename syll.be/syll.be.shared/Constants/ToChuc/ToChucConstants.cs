@@ -11,5 +11,6 @@ namespace syll.be.shared.Constants.ToChuc
         public const int DaiHocCongLap = 1;
         public const int KhoaDaoTao = 2;
         public const int PhongBan = 3;
+        public const int Khac = 4;
     }
 }

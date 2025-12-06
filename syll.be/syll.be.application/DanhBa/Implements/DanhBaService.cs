@@ -493,6 +493,193 @@ namespace syll.be.application.DanhBa.Implements
                 ImportTimeInSeconds = importTimeInSeconds
             };
         }
+
+
+
+        public async Task<ImportDanhBaResponseDto> ImportDanhBaCustom(ImportDanhBaCustomDto dto)
+        {
+            _logger.LogInformation($"{nameof(ImportDanhBaCustom)} dto={JsonSerializer.Serialize(dto)}");
+
+            var startTime = DateTime.UtcNow;
+            var currentUserId = getCurrentUserId();
+            var vietnamTime = GetVietnamTime();
+
+            if (string.IsNullOrEmpty(dto.Url))
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            if (string.IsNullOrEmpty(dto.SheetName))
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var hasPermission = await _checkGoogleSheetPermission(dto.Url);
+            if (!hasPermission)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var sheetData = await _getSheetData(dto.Url, dto.SheetName);
+
+            if (sheetData == null || sheetData.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            if (dto.IndexRowHeader > sheetData.Count || dto.IndexRowStartImport > sheetData.Count)
+            {
+                throw new UserFriendlyException(ErrorCodes.GoogleSheetUrlErrorInvalid);
+            }
+
+            var totalRowsImported = 0;
+            var totalDataImported = 0;
+
+            var emailsToImport = new List<string>();
+            var importDataMap = new Dictionary<string, (string hoTen, string hoDem, string ten)>();
+
+            for (int i = dto.IndexRowStartImport - 1; i < sheetData.Count; i++)
+            {
+                var row = sheetData[i];
+
+                if (row == null || row.Count == 0)
+                {
+                    continue;
+                }
+
+                var hoTen = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0 ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty : string.Empty;
+                var email = dto.IndexColumnEmail - 1 < row.Count && dto.IndexColumnEmail > 0 ? row[dto.IndexColumnEmail - 1]?.ToString() ?? string.Empty : string.Empty;
+                //var maSoToChuc = dto.IndexColumnMaSoToChuc - 1 < row.Count && dto.IndexColumnMaSoToChuc > 0 ? row[dto.IndexColumnMaSoToChuc - 1]?.ToString() ?? string.Empty : string.Empty;
+
+                if (string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(email))
+                {
+                    continue;
+                }
+
+                totalRowsImported++;
+
+                var hoTenOriginal = dto.IndexColumnHoTen - 1 < row.Count && dto.IndexColumnHoTen > 0
+                    ? row[dto.IndexColumnHoTen - 1]?.ToString() ?? string.Empty
+                    : string.Empty;
+
+                var hoTenTrimmed = hoTenOriginal.Trim();
+                var parts = hoTenTrimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var ten = parts.Length > 0 ? parts[parts.Length - 1] : string.Empty;
+                var hoDem = parts.Length > 1 ? string.Join(" ", parts.Take(parts.Length - 1)) : string.Empty;
+
+
+                emailsToImport.Add(email);
+                importDataMap[email] = (hoTenOriginal, hoDem, ten);
+            }
+
+            if (emailsToImport.Count == 0)
+            {
+                return new ImportDanhBaResponseDto
+                {
+                    TotalRowsImported = 0,
+                    TotalDataImported = 0,
+                    ImportTimeInSeconds = 0
+                };
+            }
+
+            var existingDanhBas = await _syllDbContext.DanhBas
+                .Where(db => emailsToImport.Contains(db.Email) && !db.Deleted)
+                .ToListAsync();
+
+            var existingEmails = existingDanhBas.Select(db => db.Email).ToHashSet();
+
+            var danhBasToUpdate = new List<domain.DanhBa.DanhBa>();
+            var danhBasToInsert = new List<domain.DanhBa.DanhBa>();
+
+            foreach (var email in emailsToImport)
+            {
+                var data = importDataMap[email];
+
+                if (existingEmails.Contains(email))
+                {
+                    var existingDanhBa = existingDanhBas.First(db => db.Email == email);
+                    existingDanhBa.HoVaTen = data.hoTen;
+                    existingDanhBa.HoDem = data.hoDem;
+                    existingDanhBa.Ten = data.ten;
+                    danhBasToUpdate.Add(existingDanhBa);
+                }
+                else
+                {
+                    var newDanhBa = new domain.DanhBa.DanhBa
+                    {
+                        HoVaTen = data.hoTen,
+                        HoDem = data.hoDem,
+                        Ten = data.ten,
+                        Email = email,
+                        //LoaiDanhBa = dto.LoaiDanhBa,
+                        CreatedBy = currentUserId,
+                        CreatedDate = vietnamTime,
+                        Deleted = false
+                    };
+                    danhBasToInsert.Add(newDanhBa);
+                }
+            }
+
+            if (danhBasToUpdate.Count > 0)
+            {
+                await _syllDbContext.BulkUpdateAsync(danhBasToUpdate);
+            }
+
+            if (danhBasToInsert.Count > 0)
+            {
+                await _syllDbContext.BulkInsertAsync(danhBasToInsert);
+                totalDataImported = danhBasToInsert.Count;
+            }
+
+            var allDanhBas = await _syllDbContext.DanhBas
+                .Where(db => emailsToImport.Contains(db.Email) && !db.Deleted)
+                .ToListAsync();
+
+            var emailToIdDanhBaMap = allDanhBas.ToDictionary(db => db.Email, db => db.Id);
+
+
+
+            var existingFormDanhBas = await _syllDbContext.FormDanhBa
+                .Where(fdb => fdb.IdFormLoai == 1 && !fdb.Deleted)
+                .ToListAsync();
+
+            var existingFormDanhBaKeys = existingFormDanhBas
+                .Select(fdb => fdb.IdDanhBa)
+                .ToHashSet();
+
+            var formDanhBasToInsert = new List<domain.FormDanhBa.FormDanhBa>();
+
+            foreach (var idDanhBa in emailToIdDanhBaMap.Values)
+            {
+                if (!existingFormDanhBaKeys.Contains(idDanhBa))
+                {
+                    var newFormDanhBa = new domain.FormDanhBa.FormDanhBa
+                    {
+                        IdFormLoai = 1,
+                        IdDanhBa = idDanhBa,
+                        CreatedBy = currentUserId,
+                        CreatedDate = vietnamTime,
+                        Deleted = false
+                    };
+                    formDanhBasToInsert.Add(newFormDanhBa);
+                }
+            }
+
+            if (formDanhBasToInsert.Count > 0)
+            {
+                await _syllDbContext.BulkInsertAsync(formDanhBasToInsert);
+            }
+
+            var endTime = DateTime.UtcNow;
+            var importTimeInSeconds = (int)(endTime - startTime).TotalSeconds;
+
+            return new ImportDanhBaResponseDto
+            {
+                TotalRowsImported = totalRowsImported,
+                TotalDataImported = totalDataImported,
+                ImportTimeInSeconds = importTimeInSeconds
+            };
+        }
         private async Task<List<List<string>>> _getSheetData(string sheetUrl, string sheetName)
         {
             var serviceAccountPath = _configuration["Google:ServiceAccountPath"];

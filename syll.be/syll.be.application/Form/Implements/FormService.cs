@@ -37,7 +37,8 @@ namespace syll.be.application.Form.Implements
         public void Create(CreateFormLoaiDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}  dto={JsonSerializer.Serialize(dto)}");
-
+            var chienDich = _syllDbContext.FormLoais.FirstOrDefault(x => x.Id == dto.IdChienDich && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorNotFound);
             var vietNamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
             var form = new domain.Form.FormLoai
@@ -52,11 +53,32 @@ namespace syll.be.application.Form.Implements
             };
             _syllDbContext.FormLoais.Add(form);
             _syllDbContext.SaveChanges();
+
+            var formId = form.Id;
+            var maxOrder = _syllDbContext.ChienDichFormLoais
+                .Where(x => x.IdChienDich == dto.IdChienDich && !x.Deleted)
+                .Max(x => (int?)x.Order) ?? 0;
+
+            var chienDichFormLoai = new domain.ChienDich.ChienDichFormLoai
+            {
+                IdChienDich = dto.IdChienDich,
+                IdFormLoai = formId,
+                IsShow = true,
+                Order = maxOrder +1,
+                CreatedBy = currentUserId,
+                CreatedDate = vietNamNow,
+            };
+            _syllDbContext.ChienDichFormLoais.Add(chienDichFormLoai);
+            _syllDbContext.SaveChanges();
         }
 
         public void Update(UpdateFormLoaiDto dto)
         {
             _logger.LogInformation($"{nameof(Update)}  dto={JsonSerializer.Serialize(dto)}");
+            var chienDich = _syllDbContext.ChienDiches.FirstOrDefault(x => x.Id == dto.IdChienDich && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorNotFound);
+            var chienDichFormLoai = _syllDbContext.ChienDichFormLoais.FirstOrDefault(x => x.IdChienDich == dto.IdChienDich && x.IdFormLoai == dto.Id && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorFormLoaiNotFoundInChienDich);
             var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == dto.Id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
             var vietNamNow = GetVietnamTime();
@@ -123,11 +145,17 @@ namespace syll.be.application.Form.Implements
             };
         }
 
-        public ViewFormLoaiDto GetFormLoaiById(int id)
+        public ViewFormLoaiDto GetFormLoaiById(int id, int idChienDich)
         {
             _logger.LogInformation($"{nameof(GetFormLoaiById)}  id={id}");
+            var chienDich = _syllDbContext.ChienDiches.FirstOrDefault(x => x.Id == idChienDich && !x.Deleted)
+              ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorNotFound);
+          
             var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+
+            var chienDichFormLoai = _syllDbContext.ChienDichFormLoais.FirstOrDefault(x => x.IdChienDich == idChienDich && x.IdFormLoai == form.Id && !x.Deleted)
+              ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorFormLoaiNotFoundInChienDich);
             return new ViewFormLoaiDto
             {
                 Id = form.Id,
@@ -138,17 +166,29 @@ namespace syll.be.application.Form.Implements
             };
         }
 
-        public void Delete(int id)
+        public void Delete(int id, int idChienDich)
         {
             _logger.LogInformation($"{nameof(Delete)}  id={id}");
+            var chienDich = _syllDbContext.ChienDiches.FirstOrDefault(x => x.Id == idChienDich && !x.Deleted)
+                ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorNotFound);
             var form = _syllDbContext.FormLoais.FirstOrDefault(f => f.Id == id && !f.Deleted)
                 ?? throw new UserFriendlyException(ErrorCodes.FormLoaiErrorNotFound);
+
+            var chienDichFormLoai = _syllDbContext.ChienDichFormLoais.FirstOrDefault(x => x.IdChienDich == idChienDich && x.IdFormLoai == form.Id && !x.Deleted)
+              ?? throw new UserFriendlyException(ErrorCodes.ChienDichErrorFormLoaiNotFoundInChienDich);
             var vietNamNow = GetVietnamTime();
             var currentUserId = getCurrentUserId();
             form.Deleted = true;
             form.DeletedBy = currentUserId;
             form.DeletedDate = vietNamNow;
+           
             _syllDbContext.FormLoais.Update(form);
+            _syllDbContext.SaveChanges();
+
+            chienDichFormLoai.Deleted = true;
+            chienDichFormLoai.DeletedBy = currentUserId;
+            chienDichFormLoai.DeletedDate = vietNamNow;
+            _syllDbContext.ChienDichFormLoais.Update(chienDichFormLoai);
             _syllDbContext.SaveChanges();
         }
 

@@ -27,6 +27,7 @@ namespace syll.be.domain.DanhBa
         public string HoDem { get; set; } = string.Empty;
         public string Ten { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        //public int LoaiDanhBa { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

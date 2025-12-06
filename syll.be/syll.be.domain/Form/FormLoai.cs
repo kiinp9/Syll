@@ -25,8 +25,7 @@ namespace syll.be.domain.Form
         public int Id { get; set; }
         public string TenForm { get; set; } = string.Empty;
         public string MoTa { get; set; } = string.Empty;
-        public int Order { get; set; }
-        public bool IsShow { get; set; }
+
         public DateTime? ThoiGianBatDau { get; set; } 
         public DateTime? ThoiGianKetThuc { get; set; } 
         public string? CreatedBy { get; set; }

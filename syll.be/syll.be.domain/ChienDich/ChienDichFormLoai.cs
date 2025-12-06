@@ -23,9 +23,10 @@ namespace syll.be.domain.ChienDich
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
         public int IdChienDich { get; set; }
         public int IdFormLoai { get; set; }
+        public int Order { get; set; }
+        public bool IsShow { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }

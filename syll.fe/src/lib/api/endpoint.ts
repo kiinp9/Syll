@@ -22,4 +22,13 @@ export const ENDPOINTS = {
     getReportNhanVienToChucPaging: (idFormLoai:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/to-chuc/paging`,
     getReportNhanVienByToChucPaging: (idFormLoai:number, idToChuc:number) => `/api/core/thong-ke/form-loai/${idFormLoai}/to-chuc/${idToChuc}/nhan-vien/paging`,
     getDashboardData: '/api/core/thong-ke/dashboard',
+    getChienDichPaging: '/api/core/chien-dich',
+    createChienDich: '/api/core/chien-dich',
+    updateChienDich: '/api/core/chien-dich',
+    getChienDichById:(idChienDich: number) => `/api/core/chien-dich/${idChienDich}`,
+    deleteChienDich:(idChienDich:number) => `/api/core/chien-dich/${idChienDich}`,
+    getPagingFormLoaiChienDich: `/api/core/chien-dich/form`,
+    updateForm: `/api/core/form`,
+    getFormById :(idChienDich:number, id: number) => `/api/core/form/${id}/chien-dich/${idChienDich}`,
+    deleteForm :(idChienDich:number, id: number) => `/api/core/form/${id}/chien-dich/${idChienDich}`,
 }

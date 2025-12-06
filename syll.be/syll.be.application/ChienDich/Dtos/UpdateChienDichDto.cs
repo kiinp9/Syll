@@ -11,13 +11,10 @@ namespace syll.be.application.ChienDich.Dtos
         public int IdChienDich { get; set; }
         public string TenChienDich { get; set; } = String.Empty;
         public string MoTa { get; set; } = String.Empty;
-        public DateTime? ThoiGíanBatDau {  get; set; }
+        public DateTime? ThoiGianBatDau {  get; set; }
         public DateTime? ThoiGianKetThuc {  get; set; }
-        public List<UpdateFormLoaiChienDichDto> FormLoais { get; set; } = new List<UpdateFormLoaiChienDichDto>();
+        public List<int> FormLoais { get; set; } = new List<int>();
     }
 
-    public class UpdateFormLoaiChienDichDto
-    {
-        public int IdFormLoai { get; set; }
-    }
+
 }
